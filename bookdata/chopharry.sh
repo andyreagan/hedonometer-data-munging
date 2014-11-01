@@ -1,0 +1,8 @@
+python chop.py "torrents/harry/Harry Potter 1 - Harry Potter and the Sorcerer's Stone - J. K. Rowling & Mary Grandpre.txt" "harry1" "english" "J.K. Rowling" "Harry Potter and the Sorcerer's Stone"
+python chop.py "torrents/harry/Harry Potter 2 - Harry Potter and the Chamber of Secrets - J. K. Rowling & Mary Grandpre.txt" "harry2" "english" "J.K. Rowling" "Harry Potter and the Chamber of Secrets"
+python chop.py "torrents/harry/Harry Potter 3 - Harry Potter and the Prisoner of Azkaban - J. K. Rowling & Mary Grandpre.txt" "harry3" "english" "J.K. Rowling" "Harry Potter and the Prisoner of Azkaban"
+python chop.py "torrents/harry/Harry Potter 4 - Harry Potter and the Goblet of Fire - J. K. Rowling & Mary Grandpre.txt" "harry4" "english" "J.K. Rowling" "Harry Potter and the Goblet of Fire"
+python chop.py "torrents/harry/Harry Potter 5 - Harry Potter and the Order of the Phoenix - J. K. Rowling & Mary Grandpre.txt" "harry5" "english" "J.K. Rowling" "Harry Potter and the Order of the Phoenix"
+python chop.py "torrents/harry/Harry Potter 6 - Harry Potter and the Half-Blood Prince - J. K. Rowling & Mary Grandpre.txt" "harry6" "english" "J.K. Rowling" "Harry Potter and the Half-Blood Prince"
+python chop.py "torrents/harry/Harry Potter 7 - Harry Potter and the Deathly Hallows - J. K. Rowling & Mary Grandpre.txt" "harry7" "english" "J.K. Rowling" "Harry Potter and the Deathly Hallows"
+python chop.py torrents/harry/allharry.txt harry8 english "J.K. Rowling" "All of Harry Potter"
