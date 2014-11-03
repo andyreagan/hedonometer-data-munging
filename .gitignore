@@ -7,3 +7,4 @@ hedostatuskeys
 wordCounts*
 *.out
 *.csv
+*.pyc

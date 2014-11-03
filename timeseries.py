@@ -4,7 +4,7 @@
 # for all keywords
 #
 # USAGE: 
-# python timeseries.py 2014-01-01 2014-06-26
+# python timeseries.py append 2014-01-01 2014-06-26 english
 
 import codecs
 from labMTsimple.storyLab import *
@@ -23,31 +23,33 @@ if __name__ == '__main__':
 
     goal = sys.argv[3]
 
-    lang = "english"
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+    lang = sys.argv[4]
+    # lang = "english"
 
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+    numw = len(labMTvector)
     if goal == "recompute":
         print "opening in write mode"
-        g = codecs.open('word-vectors/sumhapps.csv','w','utf8')
+        g = codecs.open('word-vectors/'+lang+'/sumhapps.csv','w','utf8')
         g.write('date,value\n')
-        h = codecs.open('word-vectors/sumfreq.csv','w','utf8')
+        h = codecs.open('word-vectors/'+lang+'/sumfreq.csv','w','utf8')
     else:
         print "opening in append mode"        
-        g = codecs.open('word-vectors/sumhapps.csv','a','utf8')
-        h = codecs.open('word-vectors/sumfreq.csv','a','utf8')
+        g = codecs.open('word-vectors/'+lang+'/sumhapps.csv','a','utf8')
+        h = codecs.open('word-vectors/'+lang+'/sumfreq.csv','a','utf8')
     # loop over time
     currDay = copy.copy(start)
     while currDay <= end:
         # empty array
         happsarray = np.zeros(24)
         dayhappsarray = np.zeros(1)
-        wordarray = [np.zeros(10222) for i in xrange(24)]
-        daywordarray = np.zeros(10222)
+        wordarray = [np.zeros(numw) for i in xrange(24)]
+        daywordarray = np.zeros(numw)
 
-        print 'reading word-vectors/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
+        print 'reading word-vectors/'+lang+'/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
         try:
-            f = codecs.open('word-vectors/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')),'r','utf8')
-            daywordarray = np.array(map(float,f.read().split('\n')[0:10222]))
+            f = codecs.open('word-vectors/'+lang+'/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')),'r','utf8')
+            daywordarray = np.array(map(float,f.read().split('\n')[0:numw]))
             f.close()
             # print daywordarray
             # print len(daywordarray)
@@ -58,8 +60,8 @@ if __name__ == '__main__':
 
     
             # write out the day happs
-            print 'reading word-vectors/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
-            f = codecs.open('word-vectors/{0}-sumhapps.csv'.format(currDay.strftime('%Y-%m-%d')),'w','utf8')
+            print 'writing word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),lang)
+            f = codecs.open('word-vectors/{1},{0}-sumhapps.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'w','utf8')
             f.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))    
             f.close()
     
@@ -86,6 +88,7 @@ if __name__ == '__main__':
         currDay += datetime.timedelta(days=1)
         
     g.close()
+    h.close()
 
 
 

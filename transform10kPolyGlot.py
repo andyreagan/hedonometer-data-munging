@@ -29,15 +29,15 @@ def writeindexfile(name,lang="english"):
   tmp = f.read()
   f.close()
 
-  longerlines = tmp.split(",")
-
   # print len(longerlines)
   # print longerlines[0:10]
   # print longerlines[49990:50020]
 
   if lang == "english":
+    longerlines = tmp.split(",")
     del(longerlines[0])
-
+  if lang == "arabic":
+    longerlines = tmp.split(u"\n")
   # print len(longerlines)
   # print longerlines[0:10]
   # print longerlines[49990:50020]
@@ -76,7 +76,7 @@ def writeindexfile(name,lang="english"):
   print "missed {0}".format(missed)
   # print index
   f = codecs.open(name,"w")
-  for i in xrange(10222):
+  for i in xrange(len(index)):
     f.write(str(index[i]))
     f.write('\n')
   f.close()
@@ -146,6 +146,7 @@ if __name__ == "__main__":
         allvecs10k[i][j] = 0.0
 
   print "writing new file..."
+  print newbase+"/"+newfile
   f = codecs.open(newbase+"/"+newfile,"w","utf8")
   # i like writing them vertically
   for i in xrange(len(labMTvector)):
@@ -157,6 +158,7 @@ if __name__ == "__main__":
   f.close()
 
   print "writing new sum file..."
+  print newbase+"/"+newfilesum
   f = codecs.open(newbase+"/"+newfilesum,"w","utf8")
   allvecs10ksum = [sum([allvecs10k[j][i] for j in xrange(24)]) for i in xrange(len(labMTvector))]
   # i like writing them vertically

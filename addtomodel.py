@@ -13,10 +13,11 @@ import datetime
 
 if __name__ == '__main__':
     [di,hi]=sys.argv[1].split(',')
+    lang=sys.argv[2]
     dates = map(int,di.split('-'))
     d = datetime.datetime(dates[0],dates[1],dates[2])
     v = float(hi)
-    h = Happs(date=d,value=v)
+    h = Happs(date=d,value=v,lang=lang)
     h.save()
 
 

@@ -17,8 +17,11 @@ if __name__ == '__main__':
     [year,month,day] = map(int,sys.argv[2].split('-'))
     end = datetime.datetime(year,month,day)
 
-    lang = "english"
+    lang = sys.argv[3]
+    #lang = "english"
+
     labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+    numw = len(labMTvector)
 
     # g = codecs.open('word-vectors/sumhapps.csv','w','utf8')
    
@@ -26,17 +29,17 @@ if __name__ == '__main__':
     currDay = copy.copy(start)
     while currDay <= end:
         # empty array
-        wordarray = np.zeros(10222)
-        prevwordarray = np.zeros(10222)
+        wordarray = np.zeros(numw)
+        prevwordarray = np.zeros(numw)
 
-        print 'reading word-vectors/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
+        print 'reading word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),lang)
         try:
-            f = codecs.open('word-vectors/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')),'r','utf8')
-            wordarray = np.array(map(float,f.read().split('\n')[0:10222]))
+            f = codecs.open('word-vectors/{1}/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'r','utf8')
+            wordarray = np.array(map(float,f.read().split('\n')[0:numw]))
             f.close()
-            print 'reading word-vectors/{0}'.format(currDay.strftime('%Y-%m-%d-prev7.csv'))
-            f = codecs.open('word-vectors/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d')),'r','utf8')
-            prevwordarray = np.array(map(float,f.read().split('\n')[0:10222]))
+            print 'reading word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-prev7.csv'),lang)
+            f = codecs.open('word-vectors/{1}/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'r','utf8')
+            prevwordarray = np.array(map(float,f.read().split('\n')[0:numw]))
             f.close()
             # print daywordarray
             print len(wordarray)
@@ -54,14 +57,19 @@ if __name__ == '__main__':
             # print sortedWords[:10]
             # print sortedType[:10]
             # print sumTypes
-            print 'writing shifts/{0}-shift.csv'.format(currDay.strftime('%Y-%m-%d'))
-            g = codecs.open('shifts/{0}-shift.csv'.format(currDay.strftime('%Y-%m-%d')),'w','utf8')
+            print 'writing shifts/{1}/{0}-shift.csv'.format(currDay.strftime('%Y-%m-%d'),lang)
+            g = codecs.open('shifts/{1}/{0}-shift.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'w','utf8')
             g.write("mag,word,type")
             for i in xrange(10):
-                g.write("\n{0},{1},{2}".format(sortedMag[i],sortedWords[i],sortedType[i]))
+                g.write("\n")
+                g.write(str(sortedMag[i]))
+                g.write(",")
+                g.write(sortedWords[i])
+                g.write(",")
+                g.write(str(sortedType[i]))
             g.close()
-            print 'writing shifts/{0}-metashift.csv'.format(currDay.strftime('%Y-%m-%d'))
-            g = codecs.open('shifts/{0}-metashift.csv'.format(currDay.strftime('%Y-%m-%d')),'w','utf8')
+            print 'writing shifts/{1}/{0}-metashift.csv'.format(currDay.strftime('%Y-%m-%d'),lang)
+            g = open('shifts/{1}/{0}-metashift.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'w')
             g.write("refH,compH,negdown,negup,posdown,posup")
             g.write("\n{0},{1},{2},{3},{4},{5}".format(prevhapps,happs,sumTypes[0],sumTypes[1],sumTypes[2],sumTypes[3]))
             g.close()
@@ -69,6 +77,7 @@ if __name__ == '__main__':
             
         except:
             print "failed"
+            raise
 
         # increase the days
         currDay += datetime.timedelta(days=1)

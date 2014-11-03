@@ -32,17 +32,17 @@ if [ ! -f word-vectors/parsed.${DAY}.csv ]; then
 	python transform10k.py parsed.${DAY}.csv
 
 	echo "python rest.py prevvectors ${DAY} ${DAY}"
-	python rest.py prevvectors ${DAY} ${DAY}
+	python rest.py prevvectors ${DAY} ${DAY} english
 
-	echo "python timeseries.py ${DAY} ${DAY} append"
-	python timeseries.py ${DAY} ${DAY} append
+	echo "python timeseries.py ${DAY} ${DAY} append english"
+	python timeseries.py ${DAY} ${DAY} append english
 
 	echo "python preshift.py prevvectors ${DAY} ${DAY}"
-	python preshift.py ${DAY} ${DAY}
+	python preshift.py ${DAY} ${DAY} english
 
 	. /home/prod/.env
-	echo "python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv)"
-	python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv)
+	echo "python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv) english"
+	python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv) english
 
 	/usr/local/share/phantomjs /root/phantom-crowbar/phantom-crowbar.js http://hedonometer.org/index.html?date=$(date +%Y-%m-%d -d "29 hours ago") shiftsvg /usr/share/nginx/data/screenshots/$(date +%Y-%m-%d -d "5 hours ago")/index-shift.svg
 	/usr/bin/convert /usr/share/nginx/data/screenshots/$(date +%Y-%m-%d -d "5 hours ago")/index-shift.svg /usr/share/nginx/data/screenshots/$(date +%Y-%m-%d -d "5 hours ago")/index-shift.png
