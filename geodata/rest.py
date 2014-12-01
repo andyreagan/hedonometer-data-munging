@@ -1,13 +1,23 @@
 # rest.py
 #
 # goal here is to expose function for taking two dates and adding the frequency vectors between those dates
+#
+# USAGE
+#
+# python rest.py range $(date +%Y-%m-%d -d "7 days ago") $(date +%Y-%m-%d -d "1 days ago") wordCountslastweek.csv
+#
+# DAY=2014-11-30
+# STATE=1
+# python rest.py previous ${DAY} 7 word-vectors/${STATE}/${DAY}-${STATE}-word-vector-previous7.csv ${STATE}
+
+
 
 import datetime
 import numpy
 import sys
 import copy
 
-def sumfiles(start,end,array):
+def sumfilesall(start,end,array):
     curr = copy.copy(start)
     while curr <= end:
         print "adding {0}".format(curr.strftime('%Y-%m-%d'))
@@ -34,30 +44,35 @@ def sumfiles(start,end,array):
 
     return array,curr
 
-if __name__ == '__main__':
-    if sys.argv[1] == 'prevvectors':
-        [year,month,day] = map(int,sys.argv[2].split('-'))
-        start = datetime.datetime(year,month,day)
-        [year,month,day] = map(int,sys.argv[3].split('-'))
-        end = datetime.datetime(year,month,day)
-        maincurr = copy.copy(start+datetime.timedelta(days=-1))
-        while maincurr<end:
-            array = numpy.zeros(10222)
-            # added the try loop to handle failure inside the sumfiles
-            # try:
-            [total,date] = sumfiles(maincurr+datetime.timedelta(days=-6),maincurr+datetime.timedelta(days=0),array)
-            
-            # write the total into a file for date
-            print "printing to {0}-prev7.csv".format(date.strftime('%Y-%m-%d'))
-            f = open('word-vectors/{0}-prev7.csv'.format(date.strftime('%Y-%m-%d')),'w')
-            for i in xrange(10222):
-                f.write('{0:.0f}\n'.format(total[i]))
+def sumfiles(start,end,array,state):
+    # pass state as a string
+    curr = copy.copy(start)
+    while curr <= end:
+        print "adding {0}".format(curr.strftime('%Y-%m-%d'))
+        try:
+            f = open('word-vectors/{1}/{0}-{1}-word-vector.csv'.format(curr.strftime('%Y-%m-%d'),state),'r')
+            # split into states
+            tmp = []
+            for line in f:
+                # print line
+                tmp.append(map(int,line.split(','))[0:10222])
             f.close()
-            # except:
-            #     print "failed on {0}".format(date.strftime('%Y-%m-%d'))
-            #     print "-------------------------------"
-            maincurr+=datetime.timedelta(days=1)
+            
+            # collapse if there was only one
+            if len(tmp) == 1:
+                tmp = tmp[0]
 
+            array=array+numpy.array(tmp)
+
+        except:
+            print "could not load word-vectors/{1}/{0}-{1}-word-vector.csv".format(curr.strftime('%Y-%m-%d'),state)
+            # raise
+            
+        curr+=datetime.timedelta(days=1)
+
+    return array,curr
+
+if __name__ == '__main__':
     if sys.argv[1] == 'range':
         [year,month,day] = map(int,sys.argv[2].split('-'))
         start = datetime.datetime(year,month,day)
@@ -67,7 +82,7 @@ if __name__ == '__main__':
 
         array = numpy.zeros((51,10222))
 
-        [total,date] = sumfiles(start,end,array)
+        [total,date] = sumfilesall(start,end,array)
             
         # write the total into a file for date
         print "printing to {0}".format(outfile)
@@ -81,27 +96,33 @@ if __name__ == '__main__':
                 f.write('\n')
         f.close()
 
-    if sys.argv[1] == 'list':
-        days = []
-        # note that [1:] is one longer than needed, but xrange won't hit it
-        for i in xrange(2,len(sys.argv[1:])):
-            [year,month,day] = map(int,sys.argv[i].split('-'))
-            days.append(datetime.datetime(year,month,day))
-        print days
+    if sys.argv[1] == 'previous':
+        [year,month,day] = map(int,sys.argv[2].split('-'))
+        end = datetime.datetime(year,month,day)+datetime.timedelta(days=-1)
+        start = end+datetime.timedelta(days=-int(sys.argv[3])+1)
 
-        outfile = sys.argv[-1]
-        print outfile
-        array = numpy.zeros(10222)
-        for day in days:
-            # this should handle the array object by reference
-            [tmp,date] = sumfiles(day,day,array)
-            array+=tmp
+        outfile = sys.argv[4]
+
+        state = sys.argv[5]
+
+        if state == 'all':
+            numstates = 51
+        else:
+            numstates = 1
+
+        array = numpy.zeros((numstates,10222))
+
+        [total,date] = sumfiles(start,end,array,state)
             
         # write the total into a file for date
         print "printing to {0}".format(outfile)
         f = open(outfile,'w')
-        for i in xrange(10222):
-            f.write('{0:.0f}\n'.format(array[i]))
+        for j in xrange(numstates):
+            f.write('{0:.0f}'.format(total[j,0]))
+            for i in xrange(1,10222):
+                f.write(',{0:.0f}'.format(total[j,i]))
+            if j < numstates-1:
+                f.write('\n')
         f.close()
 
 
