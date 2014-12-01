@@ -18,7 +18,7 @@ DAY=$(date +%Y-%m-%d -d "29 hours ago")
 
 echo "processing ${DAY} for ${LANG}"
 
-if [ ! -f word-vectors/${LANG}/parsed.${DAY}.csv ]; then
+if [ ! -f word-vectors/${LANG}/${DAY}-sum.csv ]; then
     echo "word-vectors/parsed.${DAY}.csv not found, attempting to copy"
 
     # may need to try both user nodes

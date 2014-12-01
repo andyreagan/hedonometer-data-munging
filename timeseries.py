@@ -26,6 +26,12 @@ if __name__ == '__main__':
     lang = sys.argv[4]
     # lang = "english"
 
+    useStopWindow = True
+    if len(sys.argv) > 5:
+        if sys.argv[5] in ["false","False","0"]:
+            useStopWindow = False
+            print "not using a stop window"
+
     labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
     numw = len(labMTvector)
     if goal == "recompute":
@@ -54,8 +60,11 @@ if __name__ == '__main__':
             # print daywordarray
             # print len(daywordarray)
             # compute happiness of the word vectors
-            stoppedVec = stopper(daywordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggaz","niggas","nigger"])
-            happs = emotionV(stoppedVec,labMTvector)
+            if useStopWindow:
+                stoppedVec = stopper(daywordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggaz","niggas","nigger"])
+                happs = emotionV(stoppedVec,labMTvector)
+            else:
+                happs = emotionV(daywordarray,labMTvector)
             dayhappsarray[0] = happs
 
     
@@ -66,7 +75,7 @@ if __name__ == '__main__':
             f.close()
     
             g.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))
-            h.write('{0},{1:.0f}\n'.format(currDay.strftime('%Y-%m-%d'),sum(stoppedVec)))
+            h.write('{0},{1:.0f}\n'.format(currDay.strftime('%Y-%m-%d'),sum(dayhappsarray)))
         except:
             print "failed"
 

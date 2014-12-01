@@ -12,11 +12,11 @@ cd /usr/share/nginx/data
 # yesterday
 DAY=$(date +%Y-%m-%d -d "29 hours ago")
 # some other date
-# DAY="2014-08-18"
+# DAY="2014-11-13"
 
 echo "processing $DAY"
 
-if [ ! -f word-vectors/parsed.${DAY}.csv ]; then
+if [ ! -f word-vectors/${DAY}-sum.csv ]; then
     echo "word-vectors/parsed.${DAY}.csv not found, attempting to copy"
 
     # may need to try both user nodes
@@ -47,7 +47,7 @@ if [ ! -f word-vectors/parsed.${DAY}.csv ]; then
 	/usr/local/share/phantomjs /root/phantom-crowbar/phantom-crowbar.js http://hedonometer.org/index.html?date=$(date +%Y-%m-%d -d "29 hours ago") shiftsvg /usr/share/nginx/data/screenshots/$(date +%Y-%m-%d -d "5 hours ago")/index-shift.svg
 	/usr/bin/convert /usr/share/nginx/data/screenshots/$(date +%Y-%m-%d -d "5 hours ago")/index-shift.svg /usr/share/nginx/data/screenshots/$(date +%Y-%m-%d -d "5 hours ago")/index-shift.png
 	echo "python hedotweet.py ${DAY}"
-        python hedotweet.py ${DAY}
+        # python hedotweet.py ${DAY}
 
     fi
 else

@@ -16,11 +16,11 @@ do
 	echo "python rest.py prevvectors ${DAY} ${DAY} ${LANG}"
 	python rest.py prevvectors ${DAY} ${DAY} ${LANG}
 
-	# echo "python timeseries.py ${DAY} ${DAY} append ${LANG}"
-	# python timeseries.py ${DAY} ${DAY} append ${LANG}
-
 	echo "python preshift.py prevvectors ${DAY} ${DAY} ${LANG}"
 	python preshift.py ${DAY} ${DAY} ${LANG}
+
+	# echo "python timeseries.py ${DAY} ${DAY} append ${LANG}"
+	# python timeseries.py ${DAY} ${DAY} append ${LANG}
 
 	# don't add them to the model yet
 	# echo "python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv) ${LANG}"
