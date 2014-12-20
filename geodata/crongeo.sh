@@ -9,6 +9,9 @@ cd /usr/share/nginx/data/geodata
 # today
 # DAY=$(date +%Y-%m-%d)
 # yesterday
+
+STATE="all"
+
 for OFFSET in 1; do
     DAY=$(date +%Y-%m-%d -d "${OFFSET} day ago")
     # some other date
@@ -16,22 +19,31 @@ for OFFSET in 1; do
 
     echo "looking for $DAY"
 
-    if [ ! -f word-vectors/${DAY}-all-word-vector.csv ]; then
+    if [ ! -f word-vectors/all/${DAY}-all-word-vector.csv ]; then
 	echo "word-vectors/${DAY}-all-word-vector.csv not found, attempting to copy"
 
 	# may need to try both user nodes
-	rsync -avzr vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/${DAY}-all-word-vector.csv word-vectors
+	rsync -avzr vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/word-vectors/${DAY}-all-word-vector.csv word-vectors/all
 	# rsync -avzr vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/*-all-happs.csv happs
-	if [ -f word-vectors/${DAY}-all-word-vector.csv ]; then
-	    echo "creating lastweek.csv"
-	    python rest.py range $(date +%Y-%m-%d -d "7 days ago") $(date +%Y-%m-%d -d "1 days ago") wordCountslastweek.csv    
-	    echo "creating lastmonth.csv"
-	    python rest.py range $(date +%Y-%m-%d -d "30 days ago") $(date +%Y-%m-%d -d "1 days ago") wordCountslastmonth.csv    
-	    echo "creating lastquarter.csv"
-	    python rest.py range $(date +%Y-%m-%d -d "90 days ago") $(date +%Y-%m-%d -d "1 days ago") wordCountslastquarter.csv    
+	if [ -f word-vectors/all/${DAY}-all-word-vector.csv ]; then
+	    # echo "creating lastweek.csv"
+	    # python rest.py range $(date +%Y-%m-%d -d "7 days ago") $(date +%Y-%m-%d -d "1 days ago") wordCountslastweek.csv    
+	    # echo "creating lastmonth.csv"
+	    # python rest.py range $(date +%Y-%m-%d -d "30 days ago") $(date +%Y-%m-%d -d "1 days ago") wordCountslastmonth.csv    
+	    # echo "creating lastquarter.csv"
+	    # python rest.py range $(date +%Y-%m-%d -d "90 days ago") $(date +%Y-%m-%d -d "1 days ago") wordCountslastquarter.csv    
 	    # echo "python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv)"
 	    # python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv)
 	    # python importhapps.py $(date +%Y-%m-%d -d "1 day ago")
+	    python rest.py previous ${DAY} 7 word-vectors/${STATE}/${DAY}-${STATE}-word-vector-previous7.csv ${STATE}
+	    python rest.py previous ${DAY} 30 word-vectors/${STATE}/${DAY}-${STATE}-word-vector-previous30.csv ${STATE}
+	    python rest.py previous ${DAY} 90 word-vectors/${STATE}/${DAY}-${STATE}-word-vector-previous90.csv ${STATE}
+	    \rm wordCountslastweek.csv
+	    \rm wordCountslastmonth.csv
+	    \rm wordCountslastquarter.csv
+	    ln -s word-vectors/${STATE}/${DAY}-${STATE}-word-vector-previous7.csv wordCountslastweek.csv
+	    ln -s word-vectors/${STATE}/${DAY}-${STATE}-word-vector-previous30.csv wordCountslastmonth.csv
+	    ln -s word-vectors/${STATE}/${DAY}-${STATE}-word-vector-previous90.csv wordCountslastquarter.csv
 	fi
     else
 	echo "word-vectors/${DAY}-all-word-vector.csv found"

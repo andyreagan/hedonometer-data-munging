@@ -9,7 +9,6 @@
 import codecs # handle utf8
 import re
 from labMTsimple.storyLab import *
-from numpy import floor
 import sys, os
 sys.path.append('/home/prod/hedonometer')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE','mysite.settings')
@@ -21,6 +20,7 @@ def chopper(words,labMT,labMTvector,outfile,minSize=1000):
   # print "now splitting the text into chunks of size 1000"
   # print "and printing those frequency vectors"
   allFvec = []
+  from numpy import floor
   for i in xrange(int(floor(len(words)/minSize))):
     chunk = unicode('')
     if i == int(floor(len(words)/minSize))-1:
@@ -43,7 +43,7 @@ def chopper(words,labMT,labMTvector,outfile,minSize=1000):
 
   f = open(outfile,"w")
   if len(allFvec) > 0:
-    # print "writing out the file to {0}".format(outfile) 
+    print "writing out the file to {0}".format(outfile) 
     f.write('{0:.0f}'.format(allFvec[0][0]))
     for k in xrange(1,len(allFvec)):
       f.write(',{0:.0f}'.format(allFvec[k][0]))
@@ -104,88 +104,33 @@ def precomputeTimeseries(fullVec,labMT,labMTvector,outfile):
     g.write("{0}".format(timeseries[i]))
   g.write("\n")
   g.close()
-
-import shutil
   
 if __name__ == "__main__":
   # assume everything is in english
   lang = "english"
   labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
 
-  # windowSizes = [500,1000,2000,5000,10000]
-  windowSizes = [2000]
+  windowSizes = [500,1000,2000,5000,10000]
 
-  query = Movie.objects.all()
-  # query = Movie.objects.filter(title="127 Hours")
-  for movie in query: # query[973:]:
+  query = Movie.objects.filter(title=sys.argv[1])
+  for movie in query:
 
     filename = movie.filename # .replace(" ","-")
     # print filename
     if filename[0:4] == "The-":
       # print "starts with the"
-      correctname = filename
       filename = filename[4:]+",-The"
-      shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.end.beg","/usr/share/nginx/data/moviedata/rawer/"+correctname+".txt")
-
-    print "filename:"
-    print filename
+    # print filename
 
     if os.path.isfile("/usr/share/nginx/data/moviedata/raw/"+filename+".txt"):
-      print "title:"
       print movie.title
-      print "opening raw/"+filename+".txt"
       f = codecs.open("raw/"+filename+".txt","r","utf8")
-      raw_text_clean = f.read()
-      f.close()
-      print "opening rawer/"+filename+".html.end.beg.clean2"
-      f = codecs.open("rawer/"+filename+".html.end.beg.clean2","r","utf8")
       raw_text = f.read()
       f.close()
     
-      words = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",raw_text_clean,flags=re.UNICODE)]
-      lines = raw_text.split("\n")
-      kwords = []
-      klines = []
-      for i in xrange(len(lines)):
-        if lines[i][0:3] != "<b>":
-          tmpwords = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",lines[i],flags=re.UNICODE)]
-          kwords.extend(tmpwords)
-          klines.extend([i for j in xrange(len(tmpwords))])
-          
-      # avhapps = emotion(raw_text,labMT)
-      print "length of the original parse"
+      words = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",raw_text,flags=re.UNICODE)]
+
       print len(words)
-      print "length of the new parse"
-      print len(kwords)
-      # print len(klines)
-      # print klines[0:20]
-
-      for window in windowSizes:
-        print window
-
-        # print klines[0:(window/10)]
-        breaks = [klines[window/10*i] for i in xrange(int(floor(float(len(klines))/window*10)))]
-        breaks[0] = 0
-        # print [window/10*i for i in xrange(int(floor(float(len(klines))/window*10)))]
-        # print breaks
-        # print len(breaks)
-        f = open("word-vectors/"+str(window)+"/"+movie.filename+"-breaks.csv","w")
-        f.write(",".join(map(str,breaks)))
-        f.close()
-        chopper(kwords,labMT,labMTvector,"word-vectors/"+str(window)+"/"+movie.filename+".csv",minSize=window/10)
-
-        f = open("word-vectors/"+str(window)+"/"+movie.filename+".csv","r")
-        fullVec = [map(int,line.split(",")) for line in f]
-        f.close()
-  
-        # some movies are blank
-        if len(fullVec) > 0:
-          if len(fullVec[0]) > 9:
-            precomputeTimeseries(fullVec,labMT,labMTvector,"timeseries/"+str(window)+"/"+movie.filename+".csv")
-        else:
-          print "this movie is blank:"
-          print movie.title
-      
-
+      # avhapps = emotion(raw_text,labMT)
 
 
