@@ -115,9 +115,11 @@ if __name__ == "__main__":
   # windowSizes = [500,1000,2000,5000,10000]
   windowSizes = [2000]
 
+  u = open("faillog.txt","a")
+
   query = Movie.objects.all()
   # query = Movie.objects.filter(title="127 Hours")
-  for movie in query: # query[973:]:
+  for movie in query[934:]:
 
     filename = movie.filename # .replace(" ","-")
     # print filename
@@ -125,7 +127,7 @@ if __name__ == "__main__":
       # print "starts with the"
       correctname = filename
       filename = filename[4:]+",-The"
-      shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.end.beg","/usr/share/nginx/data/moviedata/rawer/"+correctname+".txt")
+      shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".txt")
 
     print "filename:"
     print filename
@@ -137,9 +139,28 @@ if __name__ == "__main__":
       f = codecs.open("raw/"+filename+".txt","r","utf8")
       raw_text_clean = f.read()
       f.close()
-      print "opening rawer/"+filename+".html.end.beg.clean2"
-      f = codecs.open("rawer/"+filename+".html.end.beg.clean2","r","utf8")
-      raw_text = f.read()
+      print "opening rawer/"+filename+".html.clean04"
+      # f = codecs("rawer/"+filename+".html.clean04","r")
+      try:
+        f = codecs.open("rawer/"+filename+".html.clean04","r","utf8")
+        raw_text = f.read()
+      except UnicodeDecodeError:
+        u.write(movie.title)
+        u.write("\n")
+        u.write("UnicodeDecodeError")
+        u.write("\n")
+      except IOError:
+        u.write(movie.title)
+        u.write("\n")
+        u.write("IOError")
+        u.write("\n")
+      except:
+        u.write(movie.title)
+        u.write("\n")
+        u.write("unknown error")
+        u.write("\n")
+        u.close()
+        raise
       f.close()
     
       words = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",raw_text_clean,flags=re.UNICODE)]
@@ -185,7 +206,15 @@ if __name__ == "__main__":
         else:
           print "this movie is blank:"
           print movie.title
+
+    else:
+      print "movie does not have a file at:"
+      print "/usr/share/nginx/data/moviedata/raw/"+filename+".txt"
+      u.write(movie.title)
+      u.write("\n")
+      u.write("missing file at ")
+      u.write("/usr/share/nginx/data/moviedata/raw/"+filename+".txt")
+      u.write("\n")
       
-
-
+  u.close()
 
