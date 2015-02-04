@@ -45,8 +45,8 @@ if __name__ == '__main__':
             print len(wordarray)
             print len(prevwordarray)
             # compute happiness of the word vectors
-            wordarrayst = stopper(wordarray,labMTvector,labMTwordList,ignore=["thirsty"])
-            prevwordarrayst = stopper(prevwordarray,labMTvector,labMTwordList,ignore=["thirsty"])
+            wordarrayst = stopper(wordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger"])
+            prevwordarrayst = stopper(prevwordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger"])
 
             happs = emotionV(wordarrayst,labMTvector)
             prevhapps = emotionV(prevwordarrayst,labMTvector)

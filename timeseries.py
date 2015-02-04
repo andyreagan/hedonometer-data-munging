@@ -70,7 +70,7 @@ if __name__ == '__main__':
     
             # write out the day happs
             print 'writing word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),lang)
-            f = codecs.open('word-vectors/{1},{0}-sumhapps.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'w','utf8')
+            f = codecs.open('word-vectors/{1}/{0}-sumhapps.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'w','utf8')
             f.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))    
             f.close()
     

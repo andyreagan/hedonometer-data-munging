@@ -10,9 +10,13 @@ cd /usr/share/nginx/data
 # today
 # DAY=$(date +%Y-%m-%d)
 # yesterday
-DAY=$(date +%Y-%m-%d -d "29 hours ago")
+# cron can't handle the list expansion {10..1}
+# so write this out manually
+for OFFSET in 5 4 3 2 1
+do
+DAY=$(date +%Y-%m-%d -d "${OFFSET} days ago")
 # some other date
-# DAY="2014-11-13"
+# DAY="2014-12-11"
 
 echo "processing $DAY"
 
@@ -53,6 +57,8 @@ if [ ! -f word-vectors/${DAY}-sum.csv ]; then
 else
     echo "word-vectors/parsed.${DAY}.csv found"
 fi
+
+done # looping over OFFSET
 
 # fixed the python script to save there
 # mv word-vectors/${DAY}-{meta,}shift.csv shifts

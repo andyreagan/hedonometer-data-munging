@@ -50,3 +50,5 @@ The Saint
 UnicodeDecodeError
 Talented-Mr--Ripley,-The.html
 IOError and missing file
+True Romance
+UnicodeDecodeError

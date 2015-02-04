@@ -12,7 +12,7 @@ cd /usr/share/nginx/data/geodata
 
 STATE="all"
 
-for OFFSET in 1; do
+for OFFSET in 12 11 10 9 8 7 6 5 4 3 2 1; do
     DAY=$(date +%Y-%m-%d -d "${OFFSET} day ago")
     # some other date
     # DAY="2014-07-08
