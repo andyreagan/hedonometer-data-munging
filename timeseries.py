@@ -61,7 +61,7 @@ if __name__ == '__main__':
             # print len(daywordarray)
             # compute happiness of the word vectors
             if useStopWindow:
-                stoppedVec = stopper(daywordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggaz","niggas","nigger"])
+                stoppedVec = stopper(daywordarray,labMTvector,labMTwordList,ignore=["lynch","thirsty","pakistan","india","nigga","niggaz","niggas","nigger"])
                 happs = emotionV(stoppedVec,labMTvector)
             else:
                 happs = emotionV(daywordarray,labMTvector)
