@@ -32,13 +32,18 @@ regions = [["France","79","french",],["Germany","86","german",],["England","239"
 
 def processregion(region,date):
     # check the day file is there
-    if not os.path.isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region[0],datetime.datetime.strftime(date,'%Y-%m-%d'))):
+    if not os.path.isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region[0].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
         rsync(region,date)
 
-    # add up the previous vectors
-    rest('prevvectors',date,date,region)
+    if os.path.isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region[0].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
+        # add up the previous vectors
+        rest('prevvectors',date,date,region)
 
-    timeseries('append',date,date,region,useStopWindow=True)
+        timeseries('append',date,date,region,useStopWindow=True)
+
+        preshift(date,date,region)
+    else:
+        print 'couldnt find the file!'
     
 def allregions(date):
     for region in regions:
@@ -64,7 +69,7 @@ def sumfiles(start,end,wordvec,lang,numw):
         # print "adding {0}".format(curr.strftime('%Y-%m-%d'))
         try:
             f = open('word-vectors/{1}/{0}-sum.csv'.format(curr.strftime('%Y-%m-%d'),lang),'r')
-            tmp = f.read().split('\n')
+            tmp = f.read().split(',')
             f.close()
             while len(tmp) > numw:
                 del(tmp[-1])
@@ -95,7 +100,7 @@ def rest(option,start,end,region,outfile='test.csv',days=[]):
             print "printing to {0}-prev7.csv".format(date.strftime('%Y-%m-%d'))
             f = open('word-vectors/{1}/{0}-prev7.csv'.format(date.strftime('%Y-%m-%d'),region[0].lower()),'w')
             for i in xrange(numw):
-                f.write('{0:.0f}\n'.format(total[i]))
+                f.write('{0:.0f},'.format(total[i]))
             f.close()
             # except:
             #     print "failed on {0}".format(date.strftime('%Y-%m-%d'))
@@ -108,19 +113,19 @@ def rest(option,start,end,region,outfile='test.csv',days=[]):
 
         wordvec = zeros(numw)
 
-        [total,date] = sumfiles(start,end,wordvec,lang,numw)
+        [total,date] = sumfiles(start,end,wordvec,region[0].lower(),numw)
             
         # write the total into a file for date
         print "printing to {0}".format(date.strftime('%Y-%m-%d'))
         f = open(outfile,'w')
         for i in xrange(numw):
-            f.write('{0}\n'.format(total[i]))
+            f.write('{0},'.format(total[i]))
         f.close()
         # except:
         #     print "failed on {0}".format(date.strftime('%Y-%m-%d'))
         #     print "-------------------------------"
 
-    if sys.argv[1] == 'list':
+    if option == 'list':
         print "heads up, the second word after list needs to be the language"
         labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+region[2]+'.txt',returnVector=True)
         numw = len(labMTvector)
@@ -128,14 +133,14 @@ def rest(option,start,end,region,outfile='test.csv',days=[]):
         wordvec = zeros(numw)
         for day in days:
             # this should handle the array object by reference
-            [tmp,date] = sumfiles(day,day,wordvec,lang,numw)
+            [tmp,date] = sumfiles(day,day,wordvec,region[0].lower(),numw)
             wordvec+=tmp
             
         # write the total into a file for date
         print "printing to {0}".format(outfile)
         f = open(outfile,'w')
         for i in xrange(numw):
-            f.write('{0:.0f}\n'.format(wordvec[i]))
+            f.write('{0:.0f},'.format(wordvec[i]))
         f.close()
 
 def timeseries(option,start,end,region,useStopWindow=True):
@@ -162,7 +167,7 @@ def timeseries(option,start,end,region,useStopWindow=True):
         print 'reading word-vectors/'+region[0].lower()+'/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
         try:
             f = codecs.open('word-vectors/'+region[0].lower()+'/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')),'r','utf8')
-            daywordarray = array(map(float,f.read().split('\n')[0:numw]))
+            daywordarray = array(map(float,f.read().split(',')[0:numw]))
             f.close()
             # print daywordarray
             # print len(daywordarray)
@@ -178,7 +183,7 @@ def timeseries(option,start,end,region,useStopWindow=True):
             # write out the day happs
             print 'writing word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),region[0].lower())
             f = codecs.open('word-vectors/{1}/{0}-sumhapps.csv'.format(currDay.strftime('%Y-%m-%d'),region[0].lower()),'w','utf8')
-            f.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))    
+            f.write('{0}'.format(dayhappsarray[0]))    
             f.close()
     
             g.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))
@@ -206,12 +211,102 @@ def timeseries(option,start,end,region,useStopWindow=True):
     g.close()
     h.close()
 
+def preshift(start,end,region):
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+region[2]+'.txt',returnVector=True)
+    numw = len(labMTvector)
+
+    # loop over time
+    currDay = copy.copy(start)
+    while currDay <= end:
+        # empty array
+        wordarray = zeros(numw)
+        prevwordarray = zeros(numw)
+
+        print 'reading word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),region[0].lower())
+        try:
+            f = codecs.open('word-vectors/{1}/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d'),region[0].lower()),'r','utf8')
+            wordarray = array(map(float,f.read().split(',')[0:numw]))
+            f.close()
+            print 'reading word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-prev7.csv'),region[0].lower())
+            f = codecs.open('word-vectors/{1}/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d'),region[0].lower()),'r','utf8')
+            prevwordarray = array(map(float,f.read().split(',')[0:numw]))
+            f.close()
+            # print daywordarray
+            print len(wordarray)
+            print len(prevwordarray)
+            # compute happiness of the word vectors
+            wordarrayst = stopper(wordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger"])
+            prevwordarrayst = stopper(prevwordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger"])
+
+            happs = emotionV(wordarrayst,labMTvector)
+            prevhapps = emotionV(prevwordarrayst,labMTvector)
+            # print happs
+
+            [sortedMag,sortedWords,sortedType,sumTypes] = shift(prevwordarrayst,wordarrayst,labMTvector,labMTwordList)
+            # print sortedMag[:10]
+            # print sortedWords[:10]
+            # print sortedType[:10]
+            # print sumTypes
+            print 'writing shifts/{1}/{0}-shift.csv'.format(currDay.strftime('%Y-%m-%d'),region[0].lower())
+            g = codecs.open('shifts/{1}/{0}-shift.csv'.format(currDay.strftime('%Y-%m-%d'),region[0].lower()),'w','utf8')
+            g.write("mag,word,type")
+            for i in xrange(10):
+                g.write("\n")
+                g.write(str(sortedMag[i]))
+                g.write(",")
+                g.write(sortedWords[i])
+                g.write(",")
+                g.write(str(sortedType[i]))
+            g.close()
+            print 'writing shifts/{1}/{0}-metashift.csv'.format(currDay.strftime('%Y-%m-%d'),region[0].lower())
+            g = open('shifts/{1}/{0}-metashift.csv'.format(currDay.strftime('%Y-%m-%d'),region[0].lower()),'w')
+            g.write("refH,compH,negdown,negup,posdown,posup")
+            g.write("\n{0},{1},{2},{3},{4},{5}".format(prevhapps,happs,sumTypes[0],sumTypes[1],sumTypes[2],sumTypes[3]))
+            g.close()
+            # write out the shift
+            
+        except:
+            print "failed"
+            raise
+
+        # increase the days
+        currDay += datetime.timedelta(days=1)
+
+def makeshiftdirectories():
+    for region in regions:
+        os.mkdir('/usr/share/nginx/data/shifts/{0}'.format(region[0].lower()))
+
+def emptysumhapps():
+    for region in regions:
+        f = open('/usr/share/nginx/data/word-vectors/{0}/sumhapps.csv'.format(region[0].lower()),'w')
+        f.write('date,value\n')
+        f.close()
+
+def printlinks():
+    for region in regions:
+        print 'http://hedonometer.org/{0}/'.format(region[0].lower())
+
 if __name__ == '__main__':
 
+    # makeshiftdirectories()
+
+    # emptysumhapps()
+
+    printlinks()
+
     # do the rsync
-    start = datetime.datetime(2015,2,4)
+    start = datetime.datetime(2014,4,16)
     end = datetime.datetime.now()
 
-    loopdates(start,end)
+    # loopdates(start,end)
+
+
+
+        
+    
+
+
+
+
 
 
