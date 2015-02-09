@@ -37,7 +37,7 @@ if [ ! -f word-vectors/${LANG}/${DAY}-sum.csv ]; then
 	python rest.py prevvectors ${DAY} ${DAY} ${LANG}
 
 	echo "python timeseries.py ${DAY} ${DAY} append ${LANG}"
-	python timeseries.py ${DAY} ${DAY} append ${LANG}
+	python timeseries.py ${DAY} ${DAY} append ${LANG} false
 
 	echo "python preshift.py prevvectors ${DAY} ${DAY} ${LANG}"
 	python preshift.py ${DAY} ${DAY} ${LANG}

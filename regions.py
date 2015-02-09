@@ -64,7 +64,7 @@ def rsync(region,date):
     # print "trying to get the file"
     if os.path.isdir('/usr/share/nginx/data/word-vectors/{0}'.format(region[0].lower())):
         # try to get the file
-        subprocess.call("rsync -avzr vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/word-vectors/{1}-{0}-word-vector.csv /usr/share/nginx/data/word-vectors/{2}/{1}-sum.csv".format(region[0],datetime.datetime.strftime(date,'%Y-%m-%d'),region[0].lower()),shell=True).communicate()
+        subprocess.call("rsync -avzr vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/word-vectors/{1}-{0}-word-vector.csv /usr/share/nginx/data/word-vectors/{2}/{1}-sum.csv".format(region[0],datetime.datetime.strftime(date,'%Y-%m-%d'),region[0].lower()),shell=True)
     else:
         os.mkdir('/usr/share/nginx/data/word-vectors/{0}'.format(region[0].lower()))
         subprocess.call("rsync -avzr vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/word-vectors/{1}-{0}-word-vector.csv /usr/share/nginx/data/word-vectors/{2}/{1}-sum.csv".format(region[0],datetime.datetime.strftime(date,'%Y-%m-%d'),region[0].lower()),shell=True).communicate()
@@ -283,6 +283,7 @@ if __name__ == '__main__':
 
     # do the rsync
     start = datetime.datetime(2014,4,15)
+    # start = datetime.datetime.now() - datetime.timedelta(days=3)
     end = datetime.datetime.now()
 
     loopdates(start,end)

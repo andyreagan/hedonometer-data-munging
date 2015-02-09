@@ -75,7 +75,7 @@ if __name__ == '__main__':
             f.close()
     
             g.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))
-            h.write('{0},{1:.0f}\n'.format(currDay.strftime('%Y-%m-%d'),sum(dayhappsarray)))
+            h.write('{0},{1:.0f}\n'.format(currDay.strftime('%Y-%m-%d'),sum(daywordarray)))
         except:
             print "failed"
 

@@ -4,10 +4,12 @@ LANG=arabic
 
 . /home/prod/.env
 
-for BACK in {1000..1}
+for BACK in {1080..1}
 do
     DAY=$(date +%Y-%m-%d -d "$BACK days ago")
     echo "processing ${DAY} for ${LANG}"
+
+    rsync -avzr vacc1:/users/c/d/cdanfort/scratch/twitter/daily-wordcounts-${LANG}/parsed.${DAY}.csv word-vectors/${LANG}
 
     if [ -f word-vectors/${LANG}/parsed.${DAY}.csv ]; then
 	echo "python transform10k.py parsed.${DAY}.csv"
@@ -19,8 +21,8 @@ do
 	echo "python preshift.py prevvectors ${DAY} ${DAY} ${LANG}"
 	python preshift.py ${DAY} ${DAY} ${LANG}
 
-	# echo "python timeseries.py ${DAY} ${DAY} append ${LANG}"
-	# python timeseries.py ${DAY} ${DAY} append ${LANG}
+	echo "python timeseries.py ${DAY} ${DAY} append ${LANG}"
+	python timeseries.py ${DAY} ${DAY} append ${LANG} false
 
 	# don't add them to the model yet
 	# echo "python addtomodel.py $(tail -n 1 word-vectors/sumhapps.csv) ${LANG}"
