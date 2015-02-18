@@ -106,6 +106,29 @@ def precomputeTimeseries(fullVec,labMT,labMTvector,outfile):
   g.close()
 
 import shutil
+
+def renameThe():
+  query = Movie.objects.all()
+  for movie in query:
+
+    filename = movie.filename # .replace(" ","-")
+    # print filename
+    if filename[0:4] == "The-":
+      # print "starts with the"
+      correctname = filename
+      filename = filename[4:]+",-The"
+      try:
+        shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.end.beg","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.end.beg")
+      except:
+        print filename+" rawer .end.beg failed, copy manually"
+      try:
+        shutil.copyfile("/usr/share/nginx/data/moviedata/raw/"+filename+".txt","/usr/share/nginx/data/moviedata/raw/"+correctname+".txt")
+      except:
+        print filename+" raw failed, copy manually"
+      try:
+        shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.clean01")
+      except:
+        print filename+" rawer clean01 failed, copy manually"
   
 if __name__ == "__main__":
   # assume everything is in english
