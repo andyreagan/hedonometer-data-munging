@@ -9,7 +9,7 @@
 import codecs # handle utf8
 import re
 from labMTsimple.storyLab import *
-from numpy import floor
+from numpy import floor,array,zeros
 import sys, os
 sys.path.append('/home/prod/hedonometer')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE','mysite.settings')
@@ -27,43 +27,40 @@ def addToModel():
   n = NYT(genre=sec,language="english",filename="NYT_labVec_"+sec+".csv",happs=0.0,variance=0.0,ignorewords="")
   n.save()
 
+def makeAllFile():
+  total = zeros(10222)
+  for q in NYT.objects.all():
+    print q.genre
+    # build up a big word vec
+    if not q.genre == 'all':
+      f = open("NYT_labVecs/"+q.filename,"r")
+      f.readline()
+      vec = [int(line.split(",")[1].rstrip()) for line in f]
+      f.close()
+      f = open("NYT_labVecs/"+q.filename+".stripped","w")
+      f.write('{0:.0f}'.format(vec[0]))
+      for v in vec[1:]:
+        f.write('\n{0:.0f}'.format(v))
+      f.close()
+      total += array(vec)
+  f = open("NYT_labVecs/"+"NYT_labVec_all.csv"+".stripped","w")
+  f.write('{0:.0f}'.format(total[0]))
+  for v in total[1:]:
+    f.write('\n{0:.0f}'.format(v))
+  f.close()
+
 def process():
   query = NYT.objects.all()
-
-  for movie in query:
-
-    filename = movie.filename # .replace(" ","-")
-    # print filename
-    if filename[0:4] == "The-":
-      # print "starts with the"
-      correctname = filename
-      filename = filename[4:]+",-The"
-      try:
-        shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.end.beg","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.end.beg")
-      except:
-        print filename+" rawer .end.beg failed, copy manually"
-      try:
-        shutil.copyfile("/usr/share/nginx/data/moviedata/raw/"+filename+".txt","/usr/share/nginx/data/moviedata/raw/"+correctname+".txt")
-      except:
-        print filename+" raw failed, copy manually"
-      try:
-        shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.clean01")
-      except:
-        print filename+" rawer clean01 failed, copy manually"
-
-
+  for section in query:
+    pass
   
 if __name__ == "__main__":
   # assume everything is in english
   lang = "english"
   labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
 
-  addToModel()
+  # addToModel()
 
-  query = NYT.objects.all()
-  for section in query:
-    print section
-
-
+  makeAllFile()
 
 
