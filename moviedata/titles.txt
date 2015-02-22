@@ -41,12 +41,12 @@ Alien Nation
 Alien Resurrection
 Aliens
 Alien
-Alien vs  Predator
+Alien vs Predator
 Ali
 All About Eve
 All About Steve
-All the King's Men
-All the President's Men
+All the Kings Men
+All the Presidents Men
 Almost Famous
 Alone in the Dark
 Amadeus
@@ -82,7 +82,7 @@ Antz
 The Apartment
 Apocalypse Now
 Apollo 13
-April Fool's Day
+April Fools Day
 Apt Pupil
 Arbitrage
 Arcade
@@ -105,7 +105,7 @@ Authors Anonymous
 Autumn in New York
 Avatar
 The Avengers
-Avventura, L' (The Adventure)
+Avventura, L (The Adventure)
 Awakenings
 Babel
 The Bachelor Party
@@ -215,7 +215,7 @@ Casino
 Cast Away
 Catch Me If You Can
 Catwoman
-Cecil B  Demented
+Cecil B Demented
 Cedar Rapids
 Celeste & Jesse Forever
 The Cell
@@ -224,7 +224,7 @@ Changeling
 The Change Up
 Chaos
 Charade
-Charlie's Angels
+Charlies Angels
 Chasing Amy
 Chasing Sleep
 Cherry Falls
@@ -235,7 +235,7 @@ Chronicle
 The Cider House Rules
 The Cincinnati Kid
 Cinema Paradiso
-Cirque du Freak The Vampire's Assistant
+Cirque du Freak The Vampires Assistant
 Citizen Kane
 City of Joy
 Clash of the Titans
@@ -284,7 +284,7 @@ The Dark Knight Rises
 Darkman
 Dark Star
 Date Night
-Dave Barry's Complete Guide to Guys
+Dave Barrys Complete Guide to Guys
 Dawn of the Dead
 Day of the Dead
 Days of Heaven
@@ -304,7 +304,7 @@ The Descendants
 Despicable Me 2
 Detroit Rock City
 Devil in a Blue Dress
-Devil's Advocate
+Devils Advocate
 Die Hard 2
 Die Hard
 Diner
@@ -322,7 +322,7 @@ Dragonslayer
 Drive Angry
 Drive
 Drop Dead Gorgeous
-Dry White Season, A
+A Dry White Season
 Duck Soup
 Dumb and Dumber
 Dune
@@ -366,7 +366,7 @@ Fatal Instinct
 The Fault in Our Stars
 Fear and Loathing in Las Vegas
 Feast
-Ferris Bueller's Day Off
+Ferris Buellers Day Off
 Field of Dreams
 The Fifth Element
 Fight Club
@@ -386,7 +386,7 @@ Fracture
 Frances
 Frankenstein
 Freaked
-Freddy vs  Jason
+Freddy vs Jason
 The French Connection
 Frequency
 Friday the 13th Part VIII Jason Takes Manhattan
@@ -421,8 +421,8 @@ Ghost Rider
 Ghost Ship
 Ghost
 Ghost World
-G I  Jane
-G I  Joe The Rise of Cobra
+G I Jane
+G I Joe The Rise of Cobra
 Ginger Snaps
 The Girl with the Dragon Tattoo
 Gladiator
@@ -479,16 +479,16 @@ Hellraiser Hellseeker
 Hellraiser
 The Help
 Henry Fool
-Henry's Crime
+Henrys Crime
 Hesher
-He's Just Not That Into You
+Hes Just Not That Into You
 High Fidelity
 Highlander Endgame
 Highlander
 The Hills Have Eyes
 His Girl Friday
 Hitchcock
-The Hitchhiker's Guide to the Galaxy
+The Hitchhikers Guide to the Galaxy
 Hollow Man
 Honeydripper
 Horrible Bosses
@@ -508,7 +508,7 @@ I Am Number Four
 I am Sam
 The Ice Storm
 The Ides of March
-I'll Do Anything
+Ill Do Anything
 I Love You Phillip Morris
 The Imaginarium of Doctor Parnassus
 Inception
@@ -537,18 +537,18 @@ The Island
 I Still Know What You Did Last Summer
 The Italian Job
 It Happened One Night
-It's a Wonderful Life
-It's Complicated
+Its a Wonderful Life
+Its Complicated
 The Jacket
 Jackie Brown
-Jacob's Ladder
+Jacobs Ladder
 Jane Eyre
 Jason X
 Jaws 2
 Jaws
 Jay and Silent Bob Strike Back
 Jennifer Eight
-Jennifer's Body
+Jennifers Body
 Jerry Maguire
 JFK
 Jimmy and Judy
@@ -568,7 +568,7 @@ Killing Zoe
 The Kingdom
 King Kong
 The King of Comedy
-The King's Speech
+The Kings Speech
 Klute
 Knocked Up
 Kramer vs Kramer
@@ -576,7 +576,7 @@ Kundun
 Kung Fu Panda
 Labor of Love
 Labyrinth
-L A  Confidential
+L A Confidential
 The Ladykillers
 Lake Placid
 Land of the Dead
@@ -610,7 +610,7 @@ The Little Mermaid
 Little Nicky
 Living in Oblivion
 Lock, Stock and Two Smoking Barrels
-Logan's Run
+Logans Run
 Lone Star
 The Long Kiss Goodnight
 Looper
@@ -633,7 +633,7 @@ Magnolia
 The Majestic (The Bijou)
 Major League
 Malcolm X
-Malibu's Most Wanted
+Malibus Most Wanted
 The Manchurian Candidate
 Manhattan Murder Mystery
 Manhunter
@@ -642,7 +642,7 @@ Man On Fire
 Man on the Moon
 Man Trouble
 The Man Who Knew Too Much
-The Man Who Wasn't There
+The Man Who Wasnt There
 Margaret
 Margin Call
 Margot at the Wedding
@@ -673,9 +673,9 @@ Midnight Express
 Midnight in Paris
 Mighty Morphin Power Rangers The Movie
 Milk
-Miller's Crossing
+Millers Crossing
 Mimic
-Mini's First Time
+Minis First Time
 Minority Report
 The Miracle Worker
 Mirrors
@@ -692,16 +692,16 @@ Moon
 Mr Blandings Builds His Dream House
 Mr Brooks
 Mr Deeds Goes to Town
-Mrs  Brown
+Mrs Brown
 Mud
 Mulan
 Mulholland Drive
 Mumford
 The Mummy
 Music of the Heart
-My Best Friend's Wedding
+My Best Friends Wedding
 My Girl
-My Mother Dreams the Satan's Disciples in New York
+My Mother Dreams the Satans Disciples in New York
 Mystery Men
 My Week with Marilyn
 Napoleon Dynamite
@@ -717,7 +717,7 @@ Next
 Nick of Time
 Nightbreed
 The Nightmare Before Christmas
-Nightmare on Elm Street, A
+A Nightmare on Elm Street
 Nightmare on Elm Street The Final Chapter
 Night Time (The Poltergeist Treatment)
 The Nines
@@ -732,11 +732,11 @@ Oblivion
 O Brother Where Art Thou%3f
 Observe and Report
 Obsessed
-Ocean's Eleven
-Ocean's Twelve
+Oceans Eleven
+Oceans Twelve
 Office Space
 Omega Man
-One Flew Over the Cuckoo's Nest
+One Flew Over the Cuckoos Nest
 Only God Forgives
 Ordinary People
 Orgy of the Dead
@@ -756,7 +756,7 @@ Pearl Harbor
 Peeping Tom
 Peggy Sue Got Married
 Perfect Creature
-Perfect World, A
+A Perfect World
 The Perks of Being a Wallflower
 Pet Sematary II
 Pet Sematary
@@ -766,7 +766,7 @@ Phone Booth
 The Pianist
 The Piano
 Pineapple Express
-Pirates of the Caribbean Dead Man's Chest
+Pirates of the Caribbean Dead Mans Chest
 Pirates of the Caribbean
 Pitch Black
 Pi
@@ -846,17 +846,17 @@ The Saint
 The Salton Sea
 The Sandlot Kids
 Save the Last Dance
-Saving Mr  Banks
+Saving Mr Banks
 Saving Private Ryan
 Saw
 Scarface
 Scary Movie 2
-Schindler's List
+Schindlers List
 Scott Pilgrim vs the World
 Scream 2
 Scream 3
 Scream
-S  Darko
+S Darko
 Se7en
 The Searchers
 Semi Pro
@@ -874,7 +874,7 @@ Shame
 Shampoo
 The Shawshank Redemption
 Sherlock Holmes
-She's Out of My League
+Shes Out of My League
 Shifty
 The Shining
 The Shipping News
@@ -898,7 +898,7 @@ Sling Blade
 Slither
 Slumdog Millionaire
 Smashed
-Smokin' Aces
+Smokin Aces
 Snatch
 Snow Falling On Cedars
 Snow White and the Huntsman
@@ -907,7 +907,7 @@ So I Married an Axe Murderer
 Solaris
 Soldier
 Someone To Watch Over Me
-Something's Gotta Give
+Somethings Gotta Give
 Source Code
 South Park
 Spanglish
@@ -932,7 +932,7 @@ Star Wars The Empire Strikes Back
 Star Wars The Phantom Menace
 State and Main
 Station West
-St  Elmo's Fire
+St Elmos Fire
 Stepmom
 The Sting
 Stir of Echoes
@@ -960,7 +960,7 @@ Syriana
 Taking Lives
 The Taking of Pelham One Two Three
 Taking Sides
-The Talented Mr  Ripley
+The Talented Mr Ripley
 Tall in the Saddle
 Tamara Drewe
 Taxi Driver
@@ -970,12 +970,12 @@ Terminator Salvation
 Terminator
 Thelma & Louise
 The Rage Carrie 2
-There's Something About Mary
+Theres Something About Mary
 They
 The Things My Father Never Taught Me
 The Thing
 Thirteen Days
-This Boy's Life
+This Boys Life
 This is 40
 Thor
 Three Kings (Spoils of War)
@@ -1035,7 +1035,7 @@ Virtuosity
 The Visitor
 Wag the Dog
 Walking Tall
-Walk to Remember, A
+A Walk to Remember
 Wall E
 Wall Street Money Never Sleeps
 Wall Street
@@ -1059,7 +1059,7 @@ Whiteout
 The White Ribbon
 White Squall
 Who Framed Roger Rabbit%3f
-Who's Your Daddy
+Whos Your Daddy
 Wild At Heart
 The Wild Bunch
 Wild Hogs
@@ -1085,8 +1085,6 @@ Year One
 Yes Man
 You Can Count On Me
 Youth in Revolt
-You've Got Mail
+Youve Got Mail
 Zero Dark Thirty
 Zerophilia
-
-

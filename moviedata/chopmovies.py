@@ -16,11 +16,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE','mysite.settings')
 from django.conf import settings
 
 from hedonometer.models import Movie
+import shutil
 
 def chopper(words,labMT,labMTvector,outfile,minSize=1000):
   # print "now splitting the text into chunks of size 1000"
   # print "and printing those frequency vectors"
   allFvec = []
+  from numpy import floor
   for i in xrange(int(floor(len(words)/minSize))):
     chunk = unicode('')
     if i == int(floor(len(words)/minSize))-1:
@@ -43,7 +45,7 @@ def chopper(words,labMT,labMTvector,outfile,minSize=1000):
 
   f = open(outfile,"w")
   if len(allFvec) > 0:
-    # print "writing out the file to {0}".format(outfile) 
+    print "writing out the file to {0}".format(outfile) 
     f.write('{0:.0f}'.format(allFvec[0][0]))
     for k in xrange(1,len(allFvec)):
       f.write(',{0:.0f}'.format(allFvec[k][0]))
@@ -105,32 +107,33 @@ def precomputeTimeseries(fullVec,labMT,labMTvector,outfile):
   g.write("\n")
   g.close()
 
-import shutil
-
-def renameThe():
+def renameThe(folder):
   query = Movie.objects.all()
   for movie in query:
-
     filename = movie.filename # .replace(" ","-")
     # print filename
     if filename[0:4] == "The-":
       # print "starts with the"
       correctname = filename
-      filename = filename[4:]+",-The"
+      wrongname = filename[4:]+",-The"
+      # try:
+      #   shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+wrongname+".html.end.beg","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.end.beg")
+      # except:
+      #   print wrongname+" rawer .end.beg failed, copy manually"
+      # try:
+      #   shutil.copyfile("/usr/share/nginx/data/moviedata/raw/"+wrongname+".txt","/usr/share/nginx/data/moviedata/raw/"+correctname+".txt")
+      # except:
+      #   print wrongname+" raw failed, copy manually"
+      # try:
+      #   shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+wrongname+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.clean01")
+      # except:
+      #   print wrongname+" rawer clean01 failed, copy manually"
       try:
-        shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.end.beg","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.end.beg")
+        shutil.move("/usr/share/nginx/data/moviedata/"+folder+"/"+wrongname+".html","/usr/share/nginx/data/moviedata/"+folder+"/"+correctname+".html")
       except:
-        print filename+" rawer .end.beg failed, copy manually"
-      try:
-        shutil.copyfile("/usr/share/nginx/data/moviedata/raw/"+filename+".txt","/usr/share/nginx/data/moviedata/raw/"+correctname+".txt")
-      except:
-        print filename+" raw failed, copy manually"
-      try:
-        shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.clean01")
-      except:
-        print filename+" rawer clean01 failed, copy manually"
-  
-if __name__ == "__main__":
+        print wrongname+" in "+folder+"  failed, copy manually"
+
+def process():
   # assume everything is in english
   lang = "english"
   labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
@@ -142,7 +145,7 @@ if __name__ == "__main__":
 
   query = Movie.objects.all()
   # query = Movie.objects.filter(title="127 Hours")
-  for movie in query[934:]:
+  for movie in query:
 
     filename = movie.filename # .replace(" ","-")
     # print filename
@@ -240,4 +243,45 @@ if __name__ == "__main__":
       u.write("\n")
       
   u.close()
+
+def testRE():
+  # assume everything is in english
+  lang = "english"
+  labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+
+  windowSizes = [500,1000,2000,5000,10000]
+
+  query = Movie.objects.filter(title=sys.argv[1])
+  for movie in query:
+
+    filename = movie.filename # .replace(" ","-")
+    # print filename
+    if filename[0:4] == "The-":
+      # print "starts with the"
+      filename = filename[4:]+",-The"
+    # print filename
+
+    if os.path.isfile("/usr/share/nginx/data/moviedata/raw/"+filename+".txt"):
+      print movie.title
+      f = codecs.open("raw/"+filename+".txt","r","utf8")
+      raw_text = f.read()
+      f.close()
+    
+      words = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",raw_text,flags=re.UNICODE)]
+
+      print len(words)
+  
+if __name__ == "__main__":
+  # will rename all of the files in raw, rawer
+  # folder = 'rawer-take2'
+  # renameThe(folder)
+
+  # pass the name of the movie via sys arg
+  # and this will print out the words
+  # testRE()
+
+  # process()
+
+
+
 

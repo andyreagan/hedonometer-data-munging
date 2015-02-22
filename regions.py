@@ -35,16 +35,16 @@ def processregion(region,date):
     if not os.path.isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region[0].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
         rsync(region,date)
 
-    if os.path.isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region[0].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
-        # add up the previous vectors
-        rest('prevvectors',date,date,region)
+        if os.path.isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region[0].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
+            # add up the previous vectors
+            rest('prevvectors',date,date,region)
 
-        timeseries(date,region,useStopWindow=True)
+            timeseries(date,region,useStopWindow=True)
 
-        preshift(date,region)
-    else:
-        # print 'couldnt find the file!'
-        pass 
+            preshift(date,region)
+        else:
+            # print 'couldnt find the file!'
+            pass 
     
 def allregions(date):
     for region in regions:
@@ -277,13 +277,14 @@ if __name__ == '__main__':
 
     # makeshiftdirectories()
 
-    emptysumhapps()
+    # emptysumhapps()
 
     # printlinks()
 
     # do the rsync
-    start = datetime.datetime(2014,4,15)
-    # start = datetime.datetime.now() - datetime.timedelta(days=3)
+    # start = datetime.datetime(2014,4,15)
+    start = datetime.datetime(2015,2,9)
+    # start = datetime.datetime.now() - datetime.timedelta(days=10)
     end = datetime.datetime.now()
 
     loopdates(start,end)

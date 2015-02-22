@@ -49,18 +49,42 @@ def makeAllFile():
     f.write('\n{0:.0f}'.format(v))
   f.close()
 
-def process():
-  query = NYT.objects.all()
-  for section in query:
-    pass
+def printWordVec():
+  q = NYT.objects.all()[1]
+  f = open("NYT_labVecs/"+q.filename,"r")
+  f.readline()
+  vec = [line.split(",")[0].rstrip('"').lstrip('"') for line in f]
+  f.close()
   
-if __name__ == "__main__":
+  f = open("NYT_labVecs/wordVec.csv","w")
+  f.write('{0}'.format(vec[0]))
+  for i in xrange(1,len(vec)):
+    f.write('\n{0}'.format(vec[i]))
+  f.close()
+
+def process():
   # assume everything is in english
   lang = "english"
   labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
 
+  query = NYT.objects.all()
+  for q in query:
+    f = open("NYT_labVecs/"+q.filename+".stripped.indexed","r")
+    textFvec = [int(line.rstrip()) for line in f]
+    f.close()
+
+    stoppedVec = stopper(textFvec,labMTvector,labMTwordList,stopVal=2.0)
+    q.happs = emotionV(stoppedVec,labMTvector)
+    q.numwords = sum(textFvec)
+    q.save()
+
+if __name__ == "__main__":
   # addToModel()
 
-  makeAllFile()
+  # makeAllFile()
+
+  process()
+
+  # printWordVec()
 
 

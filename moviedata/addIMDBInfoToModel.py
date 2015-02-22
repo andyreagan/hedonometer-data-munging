@@ -8,13 +8,12 @@ from hedonometer.models import Actor,Director,Writer,Movie
 import unirest
 import datetime
 
-if __name__ == "__main__":
-
+def scrape():
     f = open("titles.txt","r")
     g = open("noresult.txt","a")
     
     startat = 1083
-    endat = 2000
+    endat = 1100
     
     for i in xrange(0,startat):
         f.readline()
@@ -144,6 +143,10 @@ if __name__ == "__main__":
 
     f.close()
     g.close()
+
+if __name__ == "__main__":
+    scrape()
+
 
 
 
