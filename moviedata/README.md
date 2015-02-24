@@ -238,7 +238,23 @@ Here is how to reprocess them from the start:
 Unpack the scripts from Lewis, the two zip files.
 unzip scripts.zip -d rawer-take2
 
+
+
 Get the titles of all of the scripts into a better format, just the titles, with none of ",The" business (using text editor magic).
+Specific things to fix: (note the double space)
+\([a-zA-Z ]+\), The -> The \1
+\([a-zA-Z ]+\), A -> A \1
+remove apostrophes:
+' -> 
+remove dots (replace with nothing)
+. -> 
+  ->
+Fix this one:
+L Avventura (The Adventure)
+
+
+
+
 
 Run addIMDB....py to make all of the database entries.
 It may take a lot of failures to get through this script.
@@ -254,6 +270,32 @@ mv rawer-take2/Majestic\,-The-\(The-Bijou\).html rawer-take2/The-Majestic-\(The-
 Edit the database entry for talented mr ripley to remove the dot.
 
 Now run the shell script to make all sorts of different processed versions.
+. clean.sh
+
+
+Have to get these two manually using wget, the python shell escape doesn't do the job:
+
+Benny-&-Joon.html
+You've-Got-Mail.html
+
+Have to move this guy by hand:
+
+mv rawer-take2/redownload/Who-Framed-Roger-Rabbit\?.html rawer-take2/redownload/Who-Framed-Roger-Rabbit%3f.html 
+
+Fixed "there's something about mary" by hand, reran clean.sh, and clean-pass2.sh.
 
 
 
+
+
+unzip
+list files into the .txt
+clean up the .txt with regex's
+rename all the files using python
+run the clean script
+run python to redownload most of them
+download the couple that don't work with python
+rerun the python script to rename them
+run the clean-pass2 script
+make sure they are all in the database (or create them), noting the ones that failed parsing both ways
+process them into timeseries!

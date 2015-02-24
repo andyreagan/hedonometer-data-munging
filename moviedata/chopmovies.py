@@ -15,8 +15,172 @@ sys.path.append('/home/prod/hedonometer')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE','mysite.settings')
 from django.conf import settings
 
-from hedonometer.models import Movie
+from hedonometer.models import Actor,Director,Writer,Movie
 import shutil
+import subprocess
+import unirest
+import datetime
+
+# assume everything is in english
+lang = "english"
+labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+
+def loop():
+    f = open("titles-clean.txt","r")
+    titles = [line.rstrip() for line in f]
+    f.close()
+    f = open("titles-raw.txt","r")
+    rawtitles = [line.rstrip() for line in f]
+    f.close()
+
+    startat = 1083
+    endat = 1100
+    
+    for i in xrange(startat,endat):
+        title = titles[i]
+        rawtitle = rawtitles[i]
+        scrape(title,rawtitle,g)
+
+    f.close()
+
+def scrape(title,rawtitle):
+    print "-"*80
+    print "-"*80
+    print title
+    print "-"*80
+
+    response = unirest.post("https://imdb.p.mashape.com/movie",
+                            headers={
+                                # "X-Mashape-Key": "KZE1CO4Mn7mshjabQzICrvp0grcSp1P4tgfjsnMW4yBZK1vhU7",
+                                "X-Mashape-Key": "KZE1CO4Mn7mshjabQzICrvp0grcSp1P4tgfjsnMW4yBZK1vhU7",
+                                "Content-Type": "application/x-www-form-urlencoded",
+                            },
+                                params={
+                                    "searchTerm": title,
+                                })
+
+    print response.body
+
+    if response.body["success"] in [True,"true","True"]:
+        print response.body["result"]
+
+        print "-"*80
+        print "actors:"
+        # go get, or create, all the actor models
+        actor_list = []
+        for actor in response.body["result"]["cast"]:
+            name = actor["actor"]
+            print name
+            q = Actor.objects.filter(name__exact=name)
+            if len(q) > 0:
+                a = q[0]
+            else:
+                a = Actor(name=name)
+                a.save()
+
+            actor_list.append(a)
+
+        print "-"*80
+        print "directors:"
+        director_list = []
+        if isinstance(response.body["result"]["director"], basestring):
+            directors = [response.body["result"]["director"]]
+        else:
+            directors = response.body["result"]["director"]
+        for director in directors:
+            name = director
+            print name
+            q = Director.objects.filter(name__exact=name)
+            if len(q) > 0:
+                a = q[0]
+            else:
+                a = Director(name=name)
+                a.save()
+
+            director_list.append(a)
+
+        print "-"*80
+        print "writers:"
+        writer_list = []
+        if isinstance(response.body["result"]["writer"], basestring):
+            writers = [response.body["result"]["writer"]]
+        else:
+            writers = response.body["result"]["writer"]
+        for writer in writers:
+            name = writer
+            print name
+            q = Writer.objects.filter(name__exact=name)
+            if len(q) > 0:
+                a = q[0]
+            else:
+                a = Writer(name=name)
+                a.save()
+            writer_list.append(a)
+                
+        genre = ",".join(response.body["result"].get("genre","none"))
+        keywords = ",".join(response.body["result"].get("keywords","none"))
+        language = response.body["result"].get("language","none")
+        imdbid = response.body["result"].get("id","none")
+        metascore = response.body["result"]["metascore"].get("given","none")
+        image = response.body["result"].get("poster","none")
+        rating = response.body["result"]["rating"].get("content","none")
+        date1 = response.body["result"].get("releaseDate","Thu Nov 20 2014")
+        if date1 == "Invalid Date":
+            date1 = "Thu Nov 20 2014"
+        releaseDate = datetime.datetime.strptime(date1,"%a %b %d %Y") # Fri Nov 21 2008
+        reviews = response.body["result"]["reviews"].get("user","none")
+        runtime = response.body["result"].get("runtime","none")
+        storyline = response.body["result"].get("storyline","none")
+        year = response.body["result"].get("year","none")
+
+        m = Movie(
+            filename = title.replace(" ","-"),
+            title = title,
+            titleraw = rawtitle,
+            # director = director_list,
+            # actor = actor_list,
+            # writer = writer_list,
+            language = language,
+            happs = 0.0,
+            length = "0",
+            ignorewords = "nigg",
+            wiki = "nolink",
+            image = image,
+            genre = genre,
+            imdbid = imdbid,
+            keywords = keywords,
+            metascore = metascore,
+            rating = rating,
+            releaseDate = releaseDate,
+            reviews = reviews,
+            runtime = runtime,
+            storyline=storyline,
+            year=year,
+        )
+        m.save()
+        for d in director_list:
+            m.director.add(d)
+        for d in actor_list:
+            m.actor.add(d)
+        for d in writer_list:
+            m.writer.add(d)
+        m.save()
+    else:
+        print "-"*80
+        print "-"*80
+        print "-"*80
+        print "-"*80
+        print title
+        print "-"*80
+        print "-"*80
+        print "-"*80
+        print "-"*80
+        m = Movie(
+            filename = title.replace(" ","-"),
+            title = title,
+            titleraw = rawtitle,)
+        m.save()
+
 
 def chopper(words,labMT,labMTvector,outfile,minSize=1000):
   # print "now splitting the text into chunks of size 1000"
@@ -111,11 +275,11 @@ def renameThe(folder):
   query = Movie.objects.all()
   for movie in query:
     filename = movie.filename # .replace(" ","-")
-    # print filename
+    correctname = filename    
     if filename[0:4] == "The-":
-      # print "starts with the"
-      correctname = filename
       wrongname = filename[4:]+",-The"
+    if filename[0:4] == "A-":
+      wrongname = filename[4:]+",-A"
       # try:
       #   shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+wrongname+".html.end.beg","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.end.beg")
       # except:
@@ -128,65 +292,120 @@ def renameThe(folder):
       #   shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+wrongname+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".html.clean01")
       # except:
       #   print wrongname+" rawer clean01 failed, copy manually"
+    if not correctname == wrongname:
       try:
         shutil.move("/usr/share/nginx/data/moviedata/"+folder+"/"+wrongname+".html","/usr/share/nginx/data/moviedata/"+folder+"/"+correctname+".html")
       except:
         print wrongname+" in "+folder+"  failed, copy manually"
 
+def renameFull(folder):
+  f = open('titles-raw.txt','r')
+  g = open('titles-clean.txt','r')
+  for line in f:
+    cleantitle = g.readline().rstrip().replace(" ","-")+".html"
+    print cleantitle
+    messytitle = line.rstrip().replace(" ","-")+".html"
+    print messytitle
+    shutil.move("/usr/share/nginx/data/moviedata/"+folder+"/"+messytitle,"/usr/share/nginx/data/moviedata/"+folder+"/"+cleantitle)
+  f.close()
+  g.close()
+
+def renameFullPass2(folder):
+  f = open('titles-raw.txt','r')
+  g = open('titles-clean.txt','r')
+  for line in f:
+    cleantitle = g.readline().rstrip().replace(" ","-")+".html"
+    messytitle = line.rstrip().replace(" ","-")+".html"
+    try:
+      shutil.move("/usr/share/nginx/data/moviedata/"+folder+"/"+messytitle,"/usr/share/nginx/data/moviedata/"+folder+"/"+cleantitle)
+      print "renamed "+messytitle
+    except:
+      pass
+  f.close()
+  g.close()
+
+def checkClean(folder):
+  f = open('titles-raw.txt','r')
+  g = open('titles-clean.txt','r')
+  if not os.path.isdir("/usr/share/nginx/data/moviedata/"+folder+"/redownload"):
+    os.mkdir("/usr/share/nginx/data/moviedata/"+folder+"/redownload")
+  for line in f:
+    cleantitle = g.readline().rstrip().replace(" ","-")+".html"
+    messytitle = line.rstrip().replace(" ","-")+".html"
+    # shutil.move("/usr/share/nginx/data/moviedata/"+folder+"/"+messytitle,"/usr/share/nginx/data/moviedata/"+folder+"/"+cleantitle)
+    fsize = os.stat("/usr/share/nginx/data/moviedata/"+folder+"/"+cleantitle+".end.beg").st_size
+    if fsize < 4000:
+      print messytitle
+      # shutil.move("/usr/share/nginx/data/moviedata/"+messytitle,"/usr/share/nginx/data/moviedata/"+folder+"/redownload/"+messytitle)
+      # use this the first time it is called to attempt to copy it down
+      # if not os.path.isfile("/usr/share/nginx/data/moviedata/"+folder+"/redownload/"+messytitle):
+      #   try:
+      #     subprocess.call("wget http://www.imsdb.com/scripts/"+messytitle.replace("'","\'"),shell=True)
+      #   except:
+      #     print "wget http://www.imsdb.com/scripts/"+messytitle.replace("'","\'").replace("&","\&")
+        
+  f.close()
+  g.close()
+
 def process():
-  # assume everything is in english
-  lang = "english"
-  labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+
 
   # windowSizes = [500,1000,2000,5000,10000]
   windowSizes = [2000]
 
-  u = open("faillog.txt","a")
+  u = open("faillog-new.txt","a")
 
   query = Movie.objects.all()
   # query = Movie.objects.filter(title="127 Hours")
   for movie in query:
 
-    filename = movie.filename # .replace(" ","-")
-    # print filename
-    if filename[0:4] == "The-":
-      # print "starts with the"
-      correctname = filename
-      filename = filename[4:]+",-The"
-      shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".txt")
+    filename = movie.filename
+    titleraw = movie.titleraw
+
+    # if filename[0:4] == "The-":
+    #   # print "starts with the"
+    #   correctname = filename
+    #   filename = filename[4:]+",-The"
+    #   shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".txt")
 
     print "filename:"
     print filename
 
-    if os.path.isfile("/usr/share/nginx/data/moviedata/raw/"+filename+".txt"):
-      print "title:"
+    print "titleraw:"
+    print titleraw
+
+    if os.path.isfile("/usr/share/nginx/data/moviedata/scriptsClean/"+titleraw.replace(" ","-")+".txt"):
+      print "found file for title:"
       print movie.title
-      print "opening raw/"+filename+".txt"
-      f = codecs.open("raw/"+filename+".txt","r","utf8")
+      print "opening scriptsClean/"+titleraw.replace(" ","-")+".txt"
+      f = codecs.open("scriptsClean/"+titleraw.replace(" ","-")+".txt","r","utf8")
       raw_text_clean = f.read()
       f.close()
-      print "opening rawer/"+filename+".html.clean04"
-      # f = codecs("rawer/"+filename+".html.clean04","r")
+      print "opening raw/"+filename+".html.clean04"
       try:
-        f = codecs.open("rawer/"+filename+".html.clean04","r","utf8")
+        f = codecs.open("raw/"+filename+".html.clean04","r","utf8")
         raw_text = f.read()
       except UnicodeDecodeError:
         u.write(movie.title)
         u.write("\n")
         u.write("UnicodeDecodeError")
         u.write("\n")
+        movie.exclude = True
+        movie.excludeReason = "UnicodeDecodeError"
       except IOError:
         u.write(movie.title)
         u.write("\n")
         u.write("IOError")
         u.write("\n")
+        movie.exclude = True
+        movie.excludeReason = "IOError"
       except:
         u.write(movie.title)
         u.write("\n")
         u.write("unknown error")
         u.write("\n")
-        u.close()
-        raise
+        movie.exclude = True
+        movie.excludeReason = "Unknown"
       f.close()
     
       words = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",raw_text_clean,flags=re.UNICODE)]
@@ -232,14 +451,18 @@ def process():
         else:
           print "this movie is blank:"
           print movie.title
+          movie.exclude = True
+          movie.excludeReason = "movie blank"
 
     else:
       print "movie does not have a file at:"
-      print "/usr/share/nginx/data/moviedata/raw/"+filename+".txt"
+      print "/usr/share/nginx/data/moviedata/scriptsClean/"+titleraw.replace(" ","-")+".txt"
+      movie.exclude = True
+      movie.excludeReason = "missing raw file in scriptsClean"
       u.write(movie.title)
       u.write("\n")
       u.write("missing file at ")
-      u.write("/usr/share/nginx/data/moviedata/raw/"+filename+".txt")
+      u.write("/usr/share/nginx/data/moviedata/scriptsClean/"+titleraw.replace(" ","-")+".txt")
       u.write("\n")
       
   u.close()
@@ -261,26 +484,75 @@ def testRE():
       filename = filename[4:]+",-The"
     # print filename
 
-    if os.path.isfile("/usr/share/nginx/data/moviedata/raw/"+filename+".txt"):
+    if os.path.isfile("/usr/share/nginx/data/moviedata/scriptsClean/"+filename+".txt"):
       print movie.title
-      f = codecs.open("raw/"+filename+".txt","r","utf8")
+      f = codecs.open("scriptsClean/"+filename+".txt","r","utf8")
       raw_text = f.read()
       f.close()
     
       words = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",raw_text,flags=re.UNICODE)]
 
       print len(words)
+
+def fixModels():
+  f = open("/usr/share/nginx/data/moviedata/titles-clean.txt","r")
+  titles = [line.rstrip() for line in f]
+  f.close()
+  f = open("/usr/share/nginx/data/moviedata/titles-raw.txt","r")
+  rawtitles = [line.rstrip() for line in f]
+  f.close()
+
+  missing = []
+
+  for title,rawtitle in zip(titles,rawtitles):
+    try:
+      m = Movie.objects.get(title=title)
+      m.titleraw = rawtitle
+      # m.save()
+    except:
+      # print title
+      # print "possible matches"
+      # print Movie.objects.filter(title__contains=title.split(" ")[0])
+      missing.append(title)
+      # scrape(title,rawtitle)
+      m = Movie(
+        filename = title.replace(" ","-"),
+        title = title,
+        titleraw = rawtitle,
+        happs = 0.0,
+        happsStart = 0.0,
+        happsEnd = 0.0,
+        happsVariance = 0.0,
+        happsMin = 0.0,
+        happsMax = 0.0,
+        happsDiff = 0.0,
+        exclude = False)
+      # m.save()
+
+  print missing
+  print len(Movie.objects.all())
+  print len(titles)
+  print len(missing)
+  
   
 if __name__ == "__main__":
   # will rename all of the files in raw, rawer
-  # folder = 'rawer-take2'
+  folder = 'rawer-take2'
   # renameThe(folder)
+  # renameFull(folder)
+  # checkClean(folder)
+  # folder = 'rawer-take2/redownload'
+  # renameFullPass2(folder)
+  # checkClean(folder)
+  # fixModels()
 
   # pass the name of the movie via sys arg
   # and this will print out the words
   # testRE()
 
-  # process()
+  # resetExclude()
+  process()
+
 
 
 

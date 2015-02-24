@@ -14,7 +14,7 @@
 30 Minutes or Less
 42
 44 Inch Chest
-48 Hrs 
+48 Hrs
 500 Days of Summer
 50 50
 8MM
@@ -105,11 +105,11 @@ Authors Anonymous
 Autumn in New York
 Avatar
 The Avengers
-Avventura, L (The Adventure)
+L Avventura (The Adventure)
 Awakenings
 Babel
-The Bachelor Party
 Bachelor Party
+The Bachelor Party
 Backdraft
 The Back up Plan
 Bad Boys
@@ -123,8 +123,8 @@ Bad Teacher
 Bamboozled
 Barry Lyndon
 Barton Fink
-Basic Instinct
 Basic
+Basic Instinct
 Basquiat
 Batman 2
 Batman
@@ -145,8 +145,8 @@ Benny & Joon
 The Best Exotic Marigold Hotel
 The Big Blue
 Big Fish
-The Big Lebowski
 Big
+The Big Lebowski
 The Big White
 The Birds
 Birthday Girl
@@ -154,10 +154,10 @@ The Black Dahlia
 Black Rain
 Black Snake Moan
 Black Swan
+Blade
 Blade II
 Blade Runner
 Blade Trinity
-Blade
 The Blast from the Past
 The Blind Side
 The Bling Ring
@@ -188,8 +188,8 @@ Braveheart
 Brazil
 Breakdown
 The Breakfast Club
-Breaking Away
 Break
+Breaking Away
 Brick
 Bridesmaids
 Bringing Out the Dead
@@ -230,8 +230,8 @@ Chasing Sleep
 Cherry Falls
 Chinatown
 Christ Complex
-Chronicles of Narnia The Lion, the Witch and the Wardrobe
 Chronicle
+Chronicles of Narnia The Lion, the Witch and the Wardrobe
 The Cider House Rules
 The Cincinnati Kid
 Cinema Paradiso
@@ -322,7 +322,7 @@ Dragonslayer
 Drive Angry
 Drive
 Drop Dead Gorgeous
-A Dry White Season
+Dry White Season, A
 Duck Soup
 Dumb and Dumber
 Dune
@@ -343,14 +343,14 @@ Enough
 Entrapment
 Erik the Viking
 Erin Brockovich
-Escape From L A 
+Escape From LA
 Escape From New York
 Eternal Sunshine of the Spotless Mind
-E T 
+ET
 Even Cowgirls Get the Blues
 Event Horizon
-Evil Dead II Dead by Dawn
 Evil Dead
+Evil Dead II Dead by Dawn
 Excalibur
 eXistenZ
 Extract
@@ -389,15 +389,15 @@ Freaked
 Freddy vs Jason
 The French Connection
 Frequency
-Friday the 13th Part VIII Jason Takes Manhattan
 Friday the 13th
+Friday the 13th Part VIII Jason Takes Manhattan
 Fright Night (1985)
 Fright Night
 From Dusk Till Dawn
 From Here to Eternity
 Frozen (Disney)
-Frozen River
 Frozen
+Frozen River
 Fruitvale Station
 The Fugitive
 Funny People
@@ -417,26 +417,26 @@ Get Shorty
 The Ghost and the Darkness
 Ghostbusters 2
 Ghostbusters
+Ghost
 Ghost Rider
 Ghost Ship
-Ghost
 Ghost World
-G I Jane
-G I Joe The Rise of Cobra
+GI Jane
+GI Joe The Rise of Cobra
 Ginger Snaps
 The Girl with the Dragon Tattoo
 Gladiator
 Glengarry Glen Gross
-The Godfather Part III
-Godfather Part II
 Godfather
+Godfather Part II
+The Godfather Part III
 Gods and Monsters
 Godzilla
+Go
 Gone in 60 Seconds
 The Good Girl
 Good Will Hunting
 Gothika
-Go
 The Graduate
 Grand Hotel
 Grand Theft Parsons
@@ -555,9 +555,9 @@ Jimmy and Judy
 John Q
 Judge Dredd
 Juno
+Jurassic Park
 Jurassic Park III
 Jurassic Park The Lost World
-Jurassic Park
 Kafka
 Kalifornia
 Kate & Leopold
@@ -576,7 +576,7 @@ Kundun
 Kung Fu Panda
 Labor of Love
 Labyrinth
-L A Confidential
+LA Confidential
 The Ladykillers
 Lake Placid
 Land of the Dead
@@ -597,14 +597,14 @@ Les Miserables
 Leviathan
 Liar Liar
 Life As A House
+Life
 The Life of David Gale
 Life of Pi
-Life
 Light Sleeper
 The Limey
 Limitless
-The Lincoln Lawyer
 Lincoln
+The Lincoln Lawyer
 Little Athens
 The Little Mermaid
 Little Nicky
@@ -680,15 +680,15 @@ Minority Report
 The Miracle Worker
 Mirrors
 Misery
-Mission Impossible II
 Mission Impossible
+Mission Impossible II
 Mission to Mars
 Moneyball
 Monkeybone
 Monte Carlo
+Moon
 Moonrise Kingdom
 Moonstruck
-Moon
 Mr Blandings Builds His Dream House
 Mr Brooks
 Mr Deeds Goes to Town
@@ -712,16 +712,16 @@ The Neverending Story
 Newsies
 New York Minute
 Next Friday
-The Next Three Days
 Next
+The Next Three Days
 Nick of Time
 Nightbreed
 The Nightmare Before Christmas
-A Nightmare on Elm Street
+Nightmare on Elm Street, A
 Nightmare on Elm Street The Final Chapter
 Night Time (The Poltergeist Treatment)
-The Nines
 Nine
+The Nines
 Ninja Assassin
 Ninotchka
 The Ninth Gate
@@ -756,20 +756,20 @@ Pearl Harbor
 Peeping Tom
 Peggy Sue Got Married
 Perfect Creature
-A Perfect World
+Perfect World, A
 The Perks of Being a Wallflower
-Pet Sematary II
 Pet Sematary
+Pet Sematary II
 Petulia
 Philadelphia
 Phone Booth
 The Pianist
 The Piano
+Pi
 Pineapple Express
 Pirates of the Caribbean Dead Mans Chest
 Pirates of the Caribbean
 Pitch Black
-Pi
 The Planet of the Apes
 Platinum Blonde
 Platoon
@@ -839,8 +839,8 @@ The Ruins
 Runaway Bride
 Rush Hour 2
 Rush Hour
-Rushmore
 Rush
+Rushmore
 Rust and Bone
 The Saint
 The Salton Sea
@@ -879,8 +879,8 @@ Shifty
 The Shining
 The Shipping News
 Shivers
-Shrek the Third
 Shrek
+Shrek the Third
 Sideways
 The Siege
 Signs
@@ -920,10 +920,10 @@ Starman
 Starship Troopers
 Star Trek First Contact
 Star Trek Generations
+Star Trek
 Star Trek II The Wrath of Khan
 Star Trek Nemesis
 Star Trek The Motion Picture
-Star Trek
 Star Wars A New Hope
 Star Wars Attack of the Clones
 Star Wars Return of the Jedi
@@ -942,7 +942,7 @@ Strangers on a Train
 The Stuntman
 Sugar and Spice
 Sugar
-Sunset Blvd 
+Sunset Blvd
 Sunshine Cleaning
 Super 8
 Superbad
@@ -966,8 +966,8 @@ Tamara Drewe
 Taxi Driver
 Ted
 Terminator 2 Judgement Day
-Terminator Salvation
 Terminator
+Terminator Salvation
 Thelma & Louise
 The Rage Carrie 2
 Theres Something About Mary
@@ -978,8 +978,8 @@ Thirteen Days
 This Boys Life
 This is 40
 Thor
-Three Kings (Spoils of War)
 Three Kings
+Three Kings (Spoils of War)
 Three Men and a Baby
 The Three Musketeers
 Thunderbirds
@@ -1005,15 +1005,15 @@ Trainspotting
 Transformers The Movie
 Tremors
 Tristan and Isolde
-TRON Legacy
 TRON
+TRON Legacy
 Tropic Thunder
 True Grit
 True Lies
 True Romance
 The Truman Show
-Twilight New Moon
 Twilight
+Twilight New Moon
 Twin Peaks
 Twins
 Two For The Money
@@ -1021,8 +1021,8 @@ The Ugly Truth
 Unbreakable
 Under Fire
 Unknown
-Up in the Air
 Up
+Up in the Air
 The Usual Suspects
 U Turn
 Valkyrie
@@ -1035,10 +1035,10 @@ Virtuosity
 The Visitor
 Wag the Dog
 Walking Tall
-A Walk to Remember
+Walk to Remember, A
 Wall E
-Wall Street Money Never Sleeps
 Wall Street
+Wall Street Money Never Sleeps
 Wanted
 War Horse
 Warm Springs
@@ -1078,8 +1078,8 @@ The Woodsman
 The World is not Enough
 The Wrestler
 The X Files Fight the Future
-X Men Origins Wolverine
 X Men
+X Men Origins Wolverine
 xXx
 Year One
 Yes Man
