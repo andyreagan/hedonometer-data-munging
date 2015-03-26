@@ -39,6 +39,6 @@ if __name__ == "__main__":
         if arg == "-l":
             lang = sys.argv[i+1]
     
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
     
     chop(infstream,outfstream,labMT,labMTvector)

@@ -101,7 +101,7 @@ def rest(option,start,end,region,outfile='test.csv',days=[]):
     # if the option is range, pass it an outfile to write to
     # if the option is list, pass it an outfile and days list
     if option == 'prevvectors':
-        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+region[2]+'.txt',returnVector=True)
+        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=region[2],returnVector=True)
         numw = len(labMTvector)
 
         maincurr = copy.copy(start+datetime.timedelta(days=-1))
@@ -123,7 +123,7 @@ def rest(option,start,end,region,outfile='test.csv',days=[]):
             maincurr+=datetime.timedelta(days=1)
 
     if option == 'range':
-        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+region[2]+'.txt',returnVector=True)
+        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=region[2],returnVector=True)
         numw = len(labMTvector)
 
         wordvec = zeros(numw)
@@ -142,7 +142,7 @@ def rest(option,start,end,region,outfile='test.csv',days=[]):
 
     if option == 'list':
         # print "heads up, the second word after list needs to be the language"
-        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+region[2]+'.txt',returnVector=True)
+        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=region[2],returnVector=True)
         numw = len(labMTvector)
 
         wordvec = zeros(numw)
@@ -159,7 +159,7 @@ def rest(option,start,end,region,outfile='test.csv',days=[]):
         f.close()
 
 def timeseries(start,region,useStopWindow=True):
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+region[2]+'.txt',returnVector=True)
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=region[2],returnVector=True)
     numw = len(labMTvector)
 
     # print "opening in append mode"        
@@ -215,7 +215,7 @@ def updateModel(start,region):
     t.save()
 
 def preshift(start,region):
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+region[2]+'.txt',returnVector=True)
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=region[2],returnVector=True)
     numw = len(labMTvector)
 
     # loop over time

@@ -24,7 +24,7 @@ if __name__ == '__main__':
     goal = sys.argv[3]
 
     lang = "english"
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
     
     print labMTvector
     print len(labMTvector)

@@ -39,7 +39,7 @@ if __name__ == '__main__':
         [year,month,day] = map(int,sys.argv[3].split('-'))
         end = datetime.datetime(year,month,day)
         lang = sys.argv[4]
-        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
         numw = len(labMTvector)
 
         maincurr = copy.copy(start+datetime.timedelta(days=-1))
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         end = datetime.datetime(year,month,day)
         outfile = sys.argv[4]
         lang = sys.argv[5]
-        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
         numw = len(labMTvector)
 
         array = numpy.zeros(numw)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     if sys.argv[1] == 'list':
         print "heads up, the second word after list needs to be the language"
         lang = sys.argv[2]
-        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
         numw = len(labMTvector)
         days = []
         # note that [1:] is one longer than needed, but xrange won't hit it

@@ -32,7 +32,7 @@ if __name__ == '__main__':
             useStopWindow = False
             print "not using a stop window"
 
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
     numw = len(labMTvector)
     if goal == "recompute":
         print "opening in write mode"

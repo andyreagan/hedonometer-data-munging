@@ -134,7 +134,7 @@ if __name__ == "__main__":
   # print allvecs[0][49990:50020]
 
   # need to get the actual size of that language
-  labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+  labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
   allvecs10k = [[0 for i in xrange(len(labMTvector))] for j in xrange(24)]
 
   print "transforming..."

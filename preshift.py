@@ -20,7 +20,7 @@ if __name__ == '__main__':
     lang = sys.argv[3]
     #lang = "english"
 
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
     numw = len(labMTvector)
 
     # g = codecs.open('word-vectors/sumhapps.csv','w','utf8')
