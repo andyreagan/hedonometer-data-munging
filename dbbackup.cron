@@ -1,0 +1,3 @@
+cd /usr/share/nginx/data
+. /home/prod/.env
+/home/prod/hedonometer/manage.py dbbackup
