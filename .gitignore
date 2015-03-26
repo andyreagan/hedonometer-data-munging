@@ -9,3 +9,5 @@ wordCounts*
 *.csv
 *.pyc
 *.zip
+*.tgz
+screenshots
