@@ -12,7 +12,7 @@ cd /usr/share/nginx/data
 # yesterday
 # cron can't handle the list expansion {10..1}
 # so write this out manually
-for OFFSET in 5 4 3 2 1
+for OFFSET in 7 6 5 4 3 2 1
 do
 DAY=$(date +%Y-%m-%d -d "${OFFSET} days ago")
 # some other date

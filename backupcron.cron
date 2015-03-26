@@ -1,0 +1,1 @@
+crontab -l > /usr/share/nginx/data/crontab.out
