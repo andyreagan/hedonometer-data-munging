@@ -298,7 +298,7 @@ if __name__ == '__main__':
     # do the rsync
     # start = datetime.datetime(2014,4,15)
     # start = datetime.datetime(2015,2,9)
-    start = datetime.datetime.now() - datetime.timedelta(days=1)
+    start = datetime.datetime.now() - datetime.timedelta(days=5)
     end = datetime.datetime.now()
 
     loopdates(start,end)
