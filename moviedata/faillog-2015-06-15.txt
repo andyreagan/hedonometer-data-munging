@@ -1,0 +1,66 @@
+25th Hour
+UnicodeDecodeError
+Ace Ventura Pet Detective
+UnicodeDecodeError
+At First Sight
+UnicodeDecodeError
+Benny & Joon
+UnicodeDecodeError
+Bottle Rocket
+UnicodeDecodeError
+Brazil
+UnicodeDecodeError
+Cinema Paradiso
+UnicodeDecodeError
+Collateral
+UnicodeDecodeError
+Cube
+UnicodeDecodeError
+Days of Heaven
+UnicodeDecodeError
+El Mariachi
+UnicodeDecodeError
+Enemy of the State
+UnicodeDecodeError
+Frequency
+UnicodeDecodeError
+Highlander Endgame
+UnicodeDecodeError
+John Q
+UnicodeDecodeError
+Jurassic Park III
+UnicodeDecodeError
+Leaving Las Vegas
+UnicodeDecodeError
+Minority Report
+UnicodeDecodeError
+Never Been Kissed
+UnicodeDecodeError
+Real Genius
+UnicodeDecodeError
+Sex, Lies and Videotape
+UnicodeDecodeError
+Star Wars Revenge of the Sith
+UnicodeDecodeError
+The Battle of Algiers
+UnicodeDecodeError
+The Beach
+UnicodeDecodeError
+The Blast from the Past
+UnicodeDecodeError
+The Crow Salvation
+UnicodeDecodeError
+The English Patient
+UnicodeDecodeError
+The Neverending Story
+UnicodeDecodeError
+The Ninth Gate
+UnicodeDecodeError
+The Planet of the Apes
+UnicodeDecodeError
+The Saint
+UnicodeDecodeError
+Training Day
+UnicodeDecodeError
+True Romance
+UnicodeDecodeError

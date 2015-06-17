@@ -21,9 +21,12 @@ import subprocess
 import unirest
 import datetime
 
+from labMTsimple.speedy import *
+labMTsenti = sentiDict('LabMT',stopVal=0.0)
+
 # assume everything is in english
 lang = "english"
-labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
 
 def loop():
     f = open("titles-clean.txt","r")
@@ -348,12 +351,10 @@ def checkClean(folder):
   g.close()
 
 def process():
-
-
   # windowSizes = [500,1000,2000,5000,10000]
   windowSizes = [2000]
 
-  u = open("faillog-new.txt","a")
+  u = open("faillog-2015-06-15.txt","a")
 
   query = Movie.objects.all()
   # query = Movie.objects.filter(title="127 Hours")
@@ -362,23 +363,17 @@ def process():
     filename = movie.filename
     titleraw = movie.titleraw
 
-    # if filename[0:4] == "The-":
-    #   # print "starts with the"
-    #   correctname = filename
-    #   filename = filename[4:]+",-The"
-    #   shutil.copyfile("/usr/share/nginx/data/moviedata/rawer/"+filename+".html.clean01","/usr/share/nginx/data/moviedata/rawer/"+correctname+".txt")
-
     print "filename:"
     print filename
 
     print "titleraw:"
     print titleraw
 
-    if os.path.isfile("/usr/share/nginx/data/moviedata/scriptsClean/"+titleraw.replace(" ","-")+".txt"):
+    if os.path.isfile("/usr/share/nginx/data/moviedata/scriptsClean/"+titleraw.replace(" ","-").replace(".","-")+".txt"):
       print "found file for title:"
       print movie.title
-      print "opening scriptsClean/"+titleraw.replace(" ","-")+".txt"
-      f = codecs.open("scriptsClean/"+titleraw.replace(" ","-")+".txt","r","utf8")
+      print "opening scriptsClean/"+titleraw.replace(" ","-").replace(".","-")+".txt"
+      f = codecs.open("scriptsClean/"+titleraw.replace(" ","-").replace(".","-")+".txt","r","utf8")
       raw_text_clean = f.read()
       f.close()
       print "opening raw/"+filename+".html.clean04"
@@ -392,6 +387,7 @@ def process():
         u.write("\n")
         movie.exclude = True
         movie.excludeReason = "UnicodeDecodeError"
+        movie.save()
       except IOError:
         u.write(movie.title)
         u.write("\n")
@@ -399,6 +395,7 @@ def process():
         u.write("\n")
         movie.exclude = True
         movie.excludeReason = "IOError"
+        movie.save()
       except:
         u.write(movie.title)
         u.write("\n")
@@ -406,6 +403,7 @@ def process():
         u.write("\n")
         movie.exclude = True
         movie.excludeReason = "Unknown"
+        movie.save()
       f.close()
     
       words = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",raw_text_clean,flags=re.UNICODE)]
@@ -466,6 +464,86 @@ def process():
       u.write("\n")
       
   u.close()
+
+def dictify(words,wordDict):
+  for word in words:
+    if word in wordDict:
+      wordDict[word] += 1
+    else:
+      wordDict[word] = 1
+
+def process_overallHapps():
+  query = Movie.objects.all().filter(exclude=False)
+  alltext_dict = dict()
+  ignoreWords = ["camera","cuts"]
+  for movie in query:
+
+    filename = movie.filename
+    titleraw = movie.titleraw
+    if filename == "All":
+      continue
+
+    print("filename:")
+    print(filename)
+
+    f = codecs.open("raw/"+filename+".html.clean04","r","utf8")
+    raw_text = f.read()
+    f.close()
+    lines = raw_text.split("\n")
+
+    # alltext += raw_text + " "
+    
+    kwords = []
+    klines = []
+    for i in xrange(len(lines)):
+      if lines[i][0:3] != "<b>":
+        tmpwords = [x.lower() for x in re.findall(r"[\w\@\#\'\&\]\*\-\/\[\=\;]+",lines[i],flags=re.UNICODE)]
+        kwords.extend(tmpwords)
+        klines.extend([i for j in xrange(len(tmpwords))])
+          
+    print("length of the new parse")
+    print(len(kwords))
+    dictify(kwords,alltext_dict)
+    
+    rawtext = " ".join(kwords)
+
+    textValence,textFvec = emotion(rawtext,labMT,shift=True,happsList=labMTvector)
+    print(textValence)
+
+    stoppedVec = stopper(textFvec,labMTvector,labMTwordList,stopVal=2.0,ignore=ignoreWords)
+    happs = emotionV(stoppedVec,labMTvector)
+    print(happs)
+
+    movie.happs = happs
+    movie.save()
+    
+    f = open("word-vectors/full/"+movie.filename+".csv","w")
+    f.write('{0:.0f}'.format(textFvec[0]))
+    for k in xrange(1,len(textFvec)):
+      f.write(',{0:.0f}'.format(textFvec[k]))
+    f.close()
+
+  print("now computing for the full thing")
+  # go compute the happs of all the movies mashed together
+  textValence = labMTsenti.scoreTrie(alltext_dict)
+  textFvec = labMTsenti.wordVecifyTrieDict(alltext_dict)
+  stoppedVec = stopper(textFvec,labMTvector,labMTwordList,stopVal=2.0,ignore=ignoreWords)
+  happs = emotionV(stoppedVec,labMTvector)
+  print(textValence)
+  print(happs)
+
+  # # create a database entry and save it
+  # m = Movie(filename="All",title="All",titleraw="All",happs=happs,happsStart=0.0,happsEnd=0.0,happsVariance=0.0,happsMin=0.0,happsMax=0.0,happsDiff=0.0,exclude=False)
+  m = Movie.objects.filter(filename="All")[0]
+  m.happs = happs
+  m.save()
+
+  # # write out the word vector
+  # f = open("word-vectors/full/"+m.filename+".csv","w")
+  # f.write('{0:.0f}'.format(textFvec[0]))
+  # for k in xrange(1,len(textFvec)):
+  #   f.write(',{0:.0f}'.format(textFvec[k]))
+  # f.close()
 
 def testRE():
   # assume everything is in english
@@ -551,8 +629,8 @@ if __name__ == "__main__":
   # testRE()
 
   # resetExclude()
-  process()
-
+  # process()
+  process_overallHapps()
 
 
 

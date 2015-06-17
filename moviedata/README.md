@@ -101,7 +101,7 @@ I'm just ignoring lines that begin with a bold tag...which may not work as well 
 Unless there are movies where it doesn't work.
 Let's try a different movie!
 
-In a few good men, my parse actually does a little bit better...by keep capital words in the description, that we want.
+In "a few good men", my parse actually does a little bit better...by keep capital words in the description, that we want.
 I think I'll just need to reparse the thing in python, and also save a file where I'm keeping track of the line numbers in which every 200 break is made.
 Since I'm only using the 2000, this will be okay (wouldn't be any harder to do it for everything).
 Then I can load that file, and save the computation in the browser. Although it seems like I could just parse the whole thing, it's so fast. Don't do it.
@@ -252,10 +252,6 @@ remove dots (replace with nothing)
 Fix this one:
 L Avventura (The Adventure)
 
-
-
-
-
 Run addIMDB....py to make all of the database entries.
 It may take a lot of failures to get through this script.
 It dumps the ones for which it couldn't get info into noresult.txt.
@@ -272,7 +268,6 @@ Edit the database entry for talented mr ripley to remove the dot.
 Now run the shell script to make all sorts of different processed versions.
 . clean.sh
 
-
 Have to get these two manually using wget, the python shell escape doesn't do the job:
 
 Benny-&-Joon.html
@@ -283,10 +278,6 @@ Have to move this guy by hand:
 mv rawer-take2/redownload/Who-Framed-Roger-Rabbit\?.html rawer-take2/redownload/Who-Framed-Roger-Rabbit%3f.html 
 
 Fixed "there's something about mary" by hand, reran clean.sh, and clean-pass2.sh.
-
-
-
-
 
 unzip
 list files into the .txt
@@ -299,3 +290,15 @@ rerun the python script to rename them
 run the clean-pass2 script
 make sure they are all in the database (or create them), noting the ones that failed parsing both ways
 process them into timeseries!
+
+2015-06-15
+
+Re-running the python script to do the final processing step, and to save the database models which didn't work in the final process this time.
+Also, replacing "." with "-" in the raw title, which is already doing a better job at getting filenames.
+
+It will definitely take a few hours to crunch through.
+Have to do everything myself if I want to understand it....
+
+Now to go ahead and make a page.
+I'll need to write another script for the backend part which fills out the happs from the database model and writes a word-vector file.
+Made `word-vectors/full` folder and going to push the full script word vectors into that.
