@@ -12,6 +12,7 @@ import numpy
 import sys
 import copy
 from labMTsimple.storyLab import *
+from os.path import isfile
 
 def sumfiles(start,end,array,lang,numw):
     curr = copy.copy(start)
@@ -111,8 +112,39 @@ if __name__ == '__main__':
             f.write('{0:.0f}\n'.format(array[i]))
         f.close()
 
+    if sys.argv[1] == 'sumday':
+        [year,month,day] = map(int,sys.argv[2].split('-'))
+        start = datetime.datetime(year,month,day,0,0)
+        end = datetime.datetime(year,month,day,0,0)+datetime.timedelta(days=1)
+        fifteen_minutes = datetime.timedelta(minutes=15)
+        lang = sys.argv[3]
+        labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
+        numw = len(labMTvector)
+        my_array = numpy.zeros(numw)
 
+        # check that all of the files are there
+        date = start
+        allfiles = True
+        while date<end:
+            if not isfile(date.strftime('word-vectors/%Y-%m-%d/%Y-%m-%d-%H-%M.csv')):
+                allfiles = False
+                break
+            date+=fifteen_minutes
+        if allfiles:
+            print('all files found')
+            date = start
+            while date<end:
+                a = numpy.genfromtxt(date.strftime('word-vectors/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'),dtype=numpy.float,delimiter=',')
+                print(a)
+                my_array += a
+                date+=fifteen_minutes
 
+            f = open(start.strftime('word-vectors/%Y-%m-%d-sum.csv'),'w')
+            for i in xrange(numw):
+                f.write('{0:.0f}\n'.format(my_array[i]))
+            f.close()
+        else:
+            print('not all files found')
 
 
 
