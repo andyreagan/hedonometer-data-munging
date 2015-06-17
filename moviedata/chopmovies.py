@@ -9,7 +9,7 @@
 import codecs # handle utf8
 import re
 from labMTsimple.storyLab import *
-from numpy import floor
+from numpy import floor,zeros,array
 import sys, os
 sys.path.append('/home/prod/hedonometer')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE','mysite.settings')
@@ -475,6 +475,7 @@ def dictify(words,wordDict):
 def process_overallHapps():
   query = Movie.objects.all().filter(exclude=False)
   alltext_dict = dict()
+  alltext_labMT_fVec = zeros(10222)
   ignoreWords = ["camera","cuts"]
   for movie in query:
 
@@ -503,47 +504,61 @@ def process_overallHapps():
           
     print("length of the new parse")
     print(len(kwords))
-    dictify(kwords,alltext_dict)
+    # not building up a dict anymore, just adding the freq vectors
+    # when not saving out the word vectors
+    # dictify(kwords,alltext_dict)
     
     rawtext = " ".join(kwords)
 
     textValence,textFvec = emotion(rawtext,labMT,shift=True,happsList=labMTvector)
-    print(textValence)
+    # print(textValence)
+    ignoreWords = ["camera","cuts"]
+    ignoreWords.extend(movie.ignorewords.split(","))
+    # this is just going to block the four nigg* and the specific movie words
+    stoppedVec = stopper(textFvec,labMTvector,labMTwordList,stopVal=0.0,ignore=ignoreWords)
+    # add this minimally blocked list to the total
+    # (since I want to only block these special words for some movies...)
+    # a bit convoluted
+    alltext_labMT_fVec += stoppedVec
 
+    # # save the completely unstopped list out
+    # f = open("word-vectors/full/"+movie.filename+".csv","w")
+    # f.write('{0:.0f}'.format(textFvec[0]))
+    # for k in xrange(1,len(textFvec)):
+    #   f.write(',{0:.0f}'.format(textFvec[k]))
+    # f.close()
+
+    # fully stop the vec to compute the happiness
     stoppedVec = stopper(textFvec,labMTvector,labMTwordList,stopVal=2.0,ignore=ignoreWords)
     happs = emotionV(stoppedVec,labMTvector)
     print(happs)
-
+    
+    movie.length = len(kwords)
     movie.happs = happs
     movie.save()
     
-    f = open("word-vectors/full/"+movie.filename+".csv","w")
-    f.write('{0:.0f}'.format(textFvec[0]))
-    for k in xrange(1,len(textFvec)):
-      f.write(',{0:.0f}'.format(textFvec[k]))
-    f.close()
-
-  print("now computing for the full thing")
-  # go compute the happs of all the movies mashed together
-  textValence = labMTsenti.scoreTrie(alltext_dict)
-  textFvec = labMTsenti.wordVecifyTrieDict(alltext_dict)
-  stoppedVec = stopper(textFvec,labMTvector,labMTwordList,stopVal=2.0,ignore=ignoreWords)
+  # print("now computing for the full thing")
+  # # go compute the happs of all the movies mashed together
+  # textValence = labMTsenti.scoreTrie(alltext_dict)
+  # textFvec = labMTsenti.wordVecifyTrieDict(alltext_dict)
+  
+  stoppedVec = stopper(alltext_labMT_fVec,labMTvector,labMTwordList,stopVal=2.0,ignore=ignoreWords)
   happs = emotionV(stoppedVec,labMTvector)
-  print(textValence)
-  print(happs)
+  # print(textValence)
+  # print(happs)
 
-  # # create a database entry and save it
-  # m = Movie(filename="All",title="All",titleraw="All",happs=happs,happsStart=0.0,happsEnd=0.0,happsVariance=0.0,happsMin=0.0,happsMax=0.0,happsDiff=0.0,exclude=False)
+  # # # create a database entry and save it
+  # # m = Movie(filename="All",title="All",titleraw="All",happs=happs,happsStart=0.0,happsEnd=0.0,happsVariance=0.0,happsMin=0.0,happsMax=0.0,happsDiff=0.0,exclude=False)
   m = Movie.objects.filter(filename="All")[0]
   m.happs = happs
   m.save()
 
-  # # write out the word vector
-  # f = open("word-vectors/full/"+m.filename+".csv","w")
-  # f.write('{0:.0f}'.format(textFvec[0]))
-  # for k in xrange(1,len(textFvec)):
-  #   f.write(',{0:.0f}'.format(textFvec[k]))
-  # f.close()
+  # write out the word vector, not stopped except for the specific words
+  f = open("word-vectors/full/"+m.filename+".csv","w")
+  f.write('{0:.0f}'.format(alltext_labMT_fVec[0]))
+  for k in xrange(1,len(alltext_labMT_fVec)):
+    f.write(',{0:.0f}'.format(alltext_labMT_fVec[k]))
+  f.close()
 
 def testRE():
   # assume everything is in english
