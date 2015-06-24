@@ -67,7 +67,6 @@ if __name__ == '__main__':
                 happs = emotionV(daywordarray,labMTvector)
             dayhappsarray[0] = happs
 
-    
             # write out the day happs
             print 'writing word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),lang)
             f = codecs.open('word-vectors/{1}/{0}-sumhapps.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'w','utf8')

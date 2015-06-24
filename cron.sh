@@ -42,7 +42,7 @@ do
     	    mkdir "word-vectors/${DAY}"
 	fi
 
-	rsync -avzr vacc2:/users/a/r/areagan/fun/twitter/realtime-parsing/word-vectors/${DAY}/ word-vectors/${DAY}
+	rsync -avzr vacc2:/users/a/r/areagan/scratch/realtime-parsing/word-vectors/${DAY}/ word-vectors/${DAY}
 
 	python rest.py "sumday" "${DAY}" "english"
 	

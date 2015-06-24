@@ -127,6 +127,7 @@ if __name__ == '__main__':
         allfiles = True
         while date<end:
             if not isfile(date.strftime('word-vectors/%Y-%m-%d/%Y-%m-%d-%H-%M.csv')):
+                print('missing {0}'.format(date.strftime('word-vectors/%Y-%m-%d/%Y-%m-%d-%H-%M.csv')))
                 allfiles = False
                 break
             date+=fifteen_minutes

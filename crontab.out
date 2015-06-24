@@ -22,11 +22,13 @@
 # m h  dom mon dow   command
 
 # grab the parsed vector from the VACC and process it
-0,15,30,45 * * * * /usr/share/nginx/data/cron.sh >> /usr/share/nginx/data/cron.out 2>&1
-0,30 * * * * /usr/share/nginx/data/cronlang.sh arabic >> /usr/share/nginx/data/cronlang.arabic.out 2>&1
+# 0,15,30,45 * * * * /usr/share/nginx/data/cron.sh >> /usr/share/nginx/data/cron.out 2>&1
+# this is no longer avail -AR 2015-06-20
+# 0,30 * * * * /usr/share/nginx/data/cronlang.sh arabic >> /usr/share/nginx/data/cronlang.arabic.out 2>&1
 
 # check the api
-30 21 * * * /usr/share/nginx/data/apicheck.sh >> /usr/share/nginx/data/apicheck.out 2>&1
+# this didn't really seem to be helping with much... -AR 2015-06-20
+# 30 21 * * * /usr/share/nginx/data/apicheck.sh >> /usr/share/nginx/data/apicheck.out 2>&1
 
 # pull down the events to a static file for faster load
 # 0,30 * * * * /usr/share/nginx/wiki/mysite/mysite/static/hedonometer/data/bigdaycache.cron
@@ -34,7 +36,7 @@
 # get the latest geo data from the VACC
 0,30 * * * * /usr/share/nginx/data/geodata/crongeo.sh >> /usr/share/nginx/data/geodata/crongeo.out 2>&1
 
-*/15 * * * * /usr/share/nginx/data/cronregions.sh >> /usr/share/nginx/data/cronregions.out 2>&1
+# */15 * * * * /usr/share/nginx/data/cronregions.sh >> /usr/share/nginx/data/cronregions.out 2>&1
 
 0 * * * * /usr/share/nginx/data/dbbackup.cron
 
