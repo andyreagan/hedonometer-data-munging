@@ -40,26 +40,26 @@ from hedonometer.models import Timeseries
 
 # regions = [["France","79","french",],["Germany","86","german",],["England","239","english",],["Spain","213","spanish",],["Brazil","32","portuguese",],["Mexico","145","spanish",],["South-Korea","211","korean",],["Egypt","69","arabic",],["Australia","14","english",],["New-Zealand","160","english",],["Canada","41","english",],["Canada-fr","41","french",],]
 
-# regions = [{'id': '79', 'lang': 'french', 'title': 'France', 'type': 'region'},
-#  {'id': '86', 'lang': 'german', 'title': 'Germany', 'type': 'region'},
-#  {'id': '239', 'lang': 'english', 'title': 'England', 'type': 'region'},
-#            {'id': '213', 'lang': 'spanish', 'title': 'Spain', 'type': 'region'},
-#  {'id': '32', 'lang': 'portuguese', 'title': 'Brazil', 'type': 'region'},
-#  {'id': '145', 'lang': 'spanish', 'title': 'Mexico', 'type': 'region'},
-#  {'id': '211', 'lang': 'korean', 'title': 'South-Korea', 'type': 'region'},
-#  {'id': '69', 'lang': 'arabic', 'title': 'Egypt', 'type': 'region'},
-#  {'id': '14', 'lang': 'english', 'title': 'Australia', 'type': 'region'},
-#  {'id': '160', 'lang': 'english', 'title': 'New-Zealand', 'type': 'region'},
-#  {'id': '41', 'lang': 'english', 'title': 'Canada', 'type': 'region'},
-#  {'id': '41', 'lang': 'french', 'title': 'Canada-fr', 'type': 'region'},
-#  {'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
+regions = [{'id': '79', 'lang': 'french', 'title': 'France', 'type': 'region'},
+ {'id': '86', 'lang': 'german', 'title': 'Germany', 'type': 'region'},
+ {'id': '239', 'lang': 'english', 'title': 'England', 'type': 'region'},
+           {'id': '213', 'lang': 'spanish', 'title': 'Spain', 'type': 'region'},
+ {'id': '32', 'lang': 'portuguese', 'title': 'Brazil', 'type': 'region'},
+ {'id': '145', 'lang': 'spanish', 'title': 'Mexico', 'type': 'region'},
+ {'id': '211', 'lang': 'korean', 'title': 'South-Korea', 'type': 'region'},
+ {'id': '69', 'lang': 'arabic', 'title': 'Egypt', 'type': 'region'},
+ {'id': '14', 'lang': 'english', 'title': 'Australia', 'type': 'region'},
+ {'id': '160', 'lang': 'english', 'title': 'New-Zealand', 'type': 'region'},
+ {'id': '41', 'lang': 'english', 'title': 'Canada', 'type': 'region'},
+ {'id': '41', 'lang': 'french', 'title': 'Canada-fr', 'type': 'region'},
+ {'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 
-regions = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
+# regions = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 
 def processregion(region,date):
     # check the day file is there
-    # if not isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
-    if True:
+    if not isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
+    # if True:
         if region["type"] == "region":
             print("proccessing {0}".format(region["title"]))
             rsync(region,date)
@@ -138,8 +138,7 @@ def sumfiles(start,end,wordvec,title,numw):
 
 def add_main(start,end,region):
     fifteen_minutes = datetime.timedelta(minutes=15)
-    lang = region["lang"]
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
+    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=region["lang"],returnVector=True)
     numw = len(labMTvector)
     my_array = zeros(numw)
 
@@ -152,20 +151,25 @@ def add_main(start,end,region):
             allfiles = False
             break
         date+=fifteen_minutes
+    # can either need all of the files, or not
+    # using the if True works for doing the full historical one
     if allfiles:
         print('all files found')
+    # if True:
         date = start
         while date<end:
-            switch_delimiter(',','\n',date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())))
-            a = genfromtxt(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())),dtype=float)
-            print(a)
-            my_array += a
+            if isfile(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower()))):            
+                switch_delimiter(',','\n',date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())))
+                a = genfromtxt(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())),dtype=float)
+                print(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())))
+                print(a)
+                my_array += a
             date+=fifteen_minutes
         print(my_array)
-
-        f = open(start.strftime('word-vectors/{0}/%Y-%m-%d-sum.csv'.format(region["title"].lower())),'w')
-        f.write('\n'.join(['{0:.0f}'.format(x) for x in my_array]))
-        f.close()
+        if sum(my_array) > 0:
+            f = open(start.strftime('word-vectors/{0}/%Y-%m-%d-sum.csv'.format(region["title"].lower())),'w')
+            f.write('\n'.join(['{0:.0f}'.format(x) for x in my_array]))
+            f.close()
     else:
         print('not all files found')
     
@@ -445,20 +449,8 @@ if __name__ == '__main__':
     # end = datetime.datetime(2015,5,27)
     end = datetime.datetime.now()
     end -= datetime.timedelta(hours=end.hour,minutes=end.minute,seconds=end.second,microseconds=end.microsecond)
-    start = end - datetime.timedelta(days=5)
-    # start = datetime.datetime(2008,9,10)
+    start = end - datetime.timedelta(days=20)
+    # start = datetime.datetime(2008,9,9)
     # start = datetime.datetime(2010,1,1)
 
-
     loopdates(start,end)
-
-
-
-        
-    
-
-
-
-
-
-

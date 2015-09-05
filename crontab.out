@@ -36,9 +36,12 @@
 # get the latest geo data from the VACC
 0,30 * * * * /usr/share/nginx/data/geodata/crongeo.sh >> /usr/share/nginx/data/geodata/crongeo.out 2>&1
 
-# */15 * * * * /usr/share/nginx/data/cronregions.sh >> /usr/share/nginx/data/cronregions.out 2>&1
+0 * * * * /usr/share/nginx/data/cronregions.sh >> /usr/share/nginx/data/cronregions.out 2>&1
 
 0 * * * * /usr/share/nginx/data/dbbackup.cron
 
 0 * * * * /usr/share/nginx/data/backupcron.cron
 
+# * * * * * /usr/share/nginx/streaming/rate_and_zip.cron > /usr/share/nginx/streaming/rate_and_zip.out 2>&1
+
+# */5 * * * * /usr/share/nginx/streaming/watchdog.cron
