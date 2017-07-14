@@ -6,12 +6,13 @@
 #
 # python chop.py data/count-of-monte-cristo.txt output french
 
+from tqdm import trange
 import codecs # handle utf8
 import re
 from labMTsimple.storyLab import *
 from numpy import floor,zeros,array
 import sys, os
-sys.path.append('/home/prod/hedonometer')
+sys.path.append('/home/prod/app')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE','mysite.settings')
 from django.conf import settings
 
@@ -27,163 +28,6 @@ labMTsenti = sentiDict('LabMT',stopVal=0.0)
 # assume everything is in english
 lang = "english"
 labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
-
-def loop():
-    f = open("titles-clean.txt","r")
-    titles = [line.rstrip() for line in f]
-    f.close()
-    f = open("titles-raw.txt","r")
-    rawtitles = [line.rstrip() for line in f]
-    f.close()
-
-    startat = 1083
-    endat = 1100
-    
-    for i in xrange(startat,endat):
-        title = titles[i]
-        rawtitle = rawtitles[i]
-        scrape(title,rawtitle,g)
-
-    f.close()
-
-def scrape(title,rawtitle):
-    print "-"*80
-    print "-"*80
-    print title
-    print "-"*80
-
-    response = unirest.post("https://imdb.p.mashape.com/movie",
-                            headers={
-                                # "X-Mashape-Key": "KZE1CO4Mn7mshjabQzICrvp0grcSp1P4tgfjsnMW4yBZK1vhU7",
-                                "X-Mashape-Key": "KZE1CO4Mn7mshjabQzICrvp0grcSp1P4tgfjsnMW4yBZK1vhU7",
-                                "Content-Type": "application/x-www-form-urlencoded",
-                            },
-                                params={
-                                    "searchTerm": title,
-                                })
-
-    print response.body
-
-    if response.body["success"] in [True,"true","True"]:
-        print response.body["result"]
-
-        print "-"*80
-        print "actors:"
-        # go get, or create, all the actor models
-        actor_list = []
-        for actor in response.body["result"]["cast"]:
-            name = actor["actor"]
-            print name
-            q = Actor.objects.filter(name__exact=name)
-            if len(q) > 0:
-                a = q[0]
-            else:
-                a = Actor(name=name)
-                a.save()
-
-            actor_list.append(a)
-
-        print "-"*80
-        print "directors:"
-        director_list = []
-        if isinstance(response.body["result"]["director"], basestring):
-            directors = [response.body["result"]["director"]]
-        else:
-            directors = response.body["result"]["director"]
-        for director in directors:
-            name = director
-            print name
-            q = Director.objects.filter(name__exact=name)
-            if len(q) > 0:
-                a = q[0]
-            else:
-                a = Director(name=name)
-                a.save()
-
-            director_list.append(a)
-
-        print "-"*80
-        print "writers:"
-        writer_list = []
-        if isinstance(response.body["result"]["writer"], basestring):
-            writers = [response.body["result"]["writer"]]
-        else:
-            writers = response.body["result"]["writer"]
-        for writer in writers:
-            name = writer
-            print name
-            q = Writer.objects.filter(name__exact=name)
-            if len(q) > 0:
-                a = q[0]
-            else:
-                a = Writer(name=name)
-                a.save()
-            writer_list.append(a)
-                
-        genre = ",".join(response.body["result"].get("genre","none"))
-        keywords = ",".join(response.body["result"].get("keywords","none"))
-        language = response.body["result"].get("language","none")
-        imdbid = response.body["result"].get("id","none")
-        metascore = response.body["result"]["metascore"].get("given","none")
-        image = response.body["result"].get("poster","none")
-        rating = response.body["result"]["rating"].get("content","none")
-        date1 = response.body["result"].get("releaseDate","Thu Nov 20 2014")
-        if date1 == "Invalid Date":
-            date1 = "Thu Nov 20 2014"
-        releaseDate = datetime.datetime.strptime(date1,"%a %b %d %Y") # Fri Nov 21 2008
-        reviews = response.body["result"]["reviews"].get("user","none")
-        runtime = response.body["result"].get("runtime","none")
-        storyline = response.body["result"].get("storyline","none")
-        year = response.body["result"].get("year","none")
-
-        m = Movie(
-            filename = title.replace(" ","-"),
-            title = title,
-            titleraw = rawtitle,
-            # director = director_list,
-            # actor = actor_list,
-            # writer = writer_list,
-            language = language,
-            happs = 0.0,
-            length = "0",
-            ignorewords = "nigg",
-            wiki = "nolink",
-            image = image,
-            genre = genre,
-            imdbid = imdbid,
-            keywords = keywords,
-            metascore = metascore,
-            rating = rating,
-            releaseDate = releaseDate,
-            reviews = reviews,
-            runtime = runtime,
-            storyline=storyline,
-            year=year,
-        )
-        m.save()
-        for d in director_list:
-            m.director.add(d)
-        for d in actor_list:
-            m.actor.add(d)
-        for d in writer_list:
-            m.writer.add(d)
-        m.save()
-    else:
-        print "-"*80
-        print "-"*80
-        print "-"*80
-        print "-"*80
-        print title
-        print "-"*80
-        print "-"*80
-        print "-"*80
-        print "-"*80
-        m = Movie(
-            filename = title.replace(" ","-"),
-            title = title,
-            titleraw = rawtitle,)
-        m.save()
-
 
 def chopper(words,labMT,labMTvector,outfile,minSize=1000):
   # print "now splitting the text into chunks of size 1000"
@@ -607,6 +451,7 @@ def fixModels():
       # print "possible matches"
       # print Movie.objects.filter(title__contains=title.split(" ")[0])
       missing.append(title)
+      # note that this moved to another python file:
       # scrape(title,rawtitle)
       m = Movie(
         filename = title.replace(" ","-"),
@@ -645,8 +490,243 @@ if __name__ == "__main__":
 
   # resetExclude()
   # process()
-  process_overallHapps()
+  # process_overallHapps()
+
+  # # check that the files all exist
+  # movies = Movie.objects.all()
+  # for m in movies:
+  #   if not os.path.isfile("scriptsClean/"+m.titleraw.replace(" ","-").replace(".","-")+".txt"):
+  #     print(m.title)
+  #     print("missing scriptsClean file")
+  #     # print "opening scriptsClean/"+titleraw.replace(" ","-").replace(".","-")+".txt"
+  #     # f = codecs.open("scriptsClean/"+titleraw.replace(" ","-").replace(".","-")+".txt","r","utf8")
+  #     # raw_text_clean = f.read()
+  #     # f.close()
+  #   if not os.path.isfile("raw/"+m.filename+".html"):
+  #     print(m.title)
+  #     print("found raw file")
+  #     # print "opening raw/"+filename+".html.clean04"
+  #     # try:
+  #     #   f = codecs.open("raw/"+filename+".html.clean04","r","utf8")      
+
+  # # check that the files all nonzero
+  # movies = Movie.objects.all()
+  # for m in movies:
+  #   a = os.stat("scriptsClean/"+m.titleraw.replace(" ","-").replace(".","-")+".txt")
+  #   if a.st_size < 100:
+  #     print("empty file: "+"scriptsClean/"+m.titleraw.replace(" ","-").replace(".","-")+".txt")
+  #   a = os.stat("raw/"+m.filename+".html")
+  #   if a.st_size < 1000:
+  #     print("empty file: "+"raw/"+m.filename+".html")
+
+  # # movies = Movie.objects.filter(title="They")
+  # movies = Movie.objects.all()
+  # # for m in movies:
+  # for i in trange(len(movies)):
+  #   m = movies[i]
+  #   # if not os.path.isfile("raw/"+m.filename+".html"):
+  #   # print(m.title)
+  #   # print("opening raw/"+filename+".html")
+  #   # try:
+  #   #     f = codecs.open("raw/"+m.filename+".html","r","utf8")
+  #   #     raw = f.read()
+  #   #     f.close()
+  #   # except UnicodeDecodeError:
+  #   #     f = codecs.open("raw/"+m.filename+".html","r","iso8859")
+  #   #     raw = f.read()
+  #   #     f.close()
+  #   #     f = codecs.open("raw/"+m.filename+".html","w","utf8")
+  #   #     f.write(raw)
+  #   #     f.close()
+  #   # except:
+  #   #   print(m.title)
+  #   #   print("couldn't read raw/"+m.filename+".html")
+  #   #   print("Unexpected error:", sys.exc_info()[0])
+  #   f = codecs.open("raw/"+m.filename+".html","r","utf8")
+  #   raw = f.read()
+  #   lines = raw.split("\n")
+  #   f.close()
+  #   # if "<pre>" not in raw:
+  #   if len(re.findall(r"<pre.*?>",raw,flags=re.IGNORECASE))==0:
+  #     print(m.title)
+  #     if len(re.findall(r"<body.*?>",raw,flags=re.IGNORECASE))==0:
+  #     # if "<body>" not in raw:
+  #       print("no body either")
+  #     # else:
+  #     #     for i,line in enumerate(raw.split("\n")):
+  #     #         if len(re.findall(r"<body.*?>",line,flags=re.IGNORECASE))>0:
+  #     #             print(raw.split("\n")[i:i+10])        
+  #     if len(re.findall(r"scrtext",raw,flags=re.IGNORECASE))==0:
+  #       # if "<body>" not in raw:
+  #       print("didn't find scrtext")
+  #     else:
+  #       found_end = False
+  #       found_beg = False
+  #       for i,line in enumerate(lines):
+  #         if len(re.findall(r"scrtext",line,flags=re.IGNORECASE))>0:
+  #           # print(raw.split("\n")[i:i+10])
+  #           found_beg = True
+  #           scrline = i
+  #           print(line)
+  #           if "<body>" not in line:
+  #             print(lines[i:i+5])
+  #           lines[i] = line.replace("<body>","<body><pre>")
+  #           print(lines[i])
+  #         if len(re.findall(r"</table>",line,flags=re.IGNORECASE))>0 and found_beg and not found_end:
+  #           found_end = True
+  #           lines[i] = line.replace("</table>","</pre></table>")
+  #           print(lines[i])
+  #       f = codecs.open("raw/"+m.filename+".html","w","utf8")
+  #       f.write("\n".join(lines))
+  #       f.close()
+  #   # elif len(re.findall(r"<pre.*?>(.*?)</pre>",raw,flags=re.IGNORECASE|re.DOTALL))!=1:
+  #   #   # print(len(re.findall(r"(?:<pre.*?>.*?)?<pre.*?>(.*?)</pre>",raw,flags=re.IGNORECASE|re.DOTALL)))
+  #   #   print(len(re.findall(r"<pre.*?>(.*?)</pre>",raw,flags=re.IGNORECASE|re.DOTALL)))
+  #   #   print(m.title)
+  #   # script = "\n".join(re.findall(r"<pre.*?>(.*?)</pre>",raw,flags=re.IGNORECASE|re.DOTALL))
+  #   # f = codecs.open("raw/"+m.filename+".txt","w","utf8")
+  #   # f.write(script)
+  #   # f.close()
+  #   beg_line = len(lines)
+  #   end_line = 0
+  #   for i,line in enumerate(lines):
+  #     if len(re.findall(r"<pre.*?>",line,flags=re.IGNORECASE|re.DOTALL))>0:
+  #       beg_line = min(i,beg_line)
+  #     if len(re.findall(r"</pre.*?>",line,flags=re.IGNORECASE|re.DOTALL))>0:
+  #       end_line = i
+  #   script = "\n".join(lines[beg_line:end_line])
+  #   f = codecs.open("raw/"+m.filename+".txt","w","utf8")
+  #   f.write(script)
+  #   f.close()
 
 
+#     # these files have good annotations
+# #     raw/Ace-Ventura-Pet-Detective.html
+# # raw/At-First-Sight.html
+# # raw/Cube.html
+# # raw/Days-of-Heaven.html
+# # raw/Erik-the-Viking.html
+# # raw/Four-Feathers.html
+# # raw/Get-Shorty.html
+# # raw/Highlander-Endgame.html
+# # raw/John-Q.html
+# # raw/Never-Been-Kissed.html
+# # raw/Real-Genius.html
+# # raw/Red-Planet.html
+# # raw/The-Saint.html
+# # raw/True-Romance.html
 
+# # get rid of insides of comments, scripts, stylesheets
+# # remove html markup, keeping: "title", "p", "b"
 
+    # # print(re.findall("<!-->",script))
+    # script = re.sub("<!--.*?-->","",script,flags=re.DOTALL|re.IGNORECASE)
+    # script = re.sub("<script.*?</script>","",script,flags=re.DOTALL|re.IGNORECASE)
+    # script = re.sub("<style.*?</style>","",script,flags=re.DOTALL|re.IGNORECASE)
+    # script = re.sub("<style.*?</style>","",script,flags=re.DOTALL|re.IGNORECASE)
+    # script = re.sub("<(?!b>|/b>|title>|/title>|p .*?>|p>|/p>).*?>","",script,flags=re.DOTALL|re.IGNORECASE)
+    # script = re.sub("\n</b>","</b>\n",script,flags=re.IGNORECASE)
+    # script = re.sub("<b>[ ]*</b>","",script,flags=re.IGNORECASE)
+    # f = codecs.open("raw/"+m.filename+".txt.clean01","w","utf8")
+    # f.write(script)
+    # f.close()
+    # # if "ID=\"dia\"" in script:
+    # #     print(m.title)
+    # #     print(set(re.findall("<p id=\"(.*?)\">",script,re.IGNORECASE)))
+    # # set([u'right', u'spkdir', u'dia', u'speaker', u'act', u'slug'])
+    # # grep -i slug raw/True-Romance.txt.clean01
+
+  # # read the clean01 files...
+  # movies = Movie.objects.all()
+  # # for m in movies:
+  # lengths = []
+  # for i in trange(len(movies)):
+  #   m = movies[i]
+  #   f = codecs.open("raw/"+m.filename+".txt.clean01","r","utf8")
+  #   script = f.read()
+  #   f.close()
+  #   lengths.append(len(script.split("\n")))
+  #   if len(script.split("\n")) < 100:
+  #     print("raw/"+m.filename+".txt.clean02")
+  #     f = codecs.open("raw/"+m.filename+".txt.clean01","w","utf8")
+  #     f.write(re.sub("  ([ ]*)","\n  \\1",script))
+  #     f.close()      
+  # print(sorted(lengths)[:40])
+  # ind = sorted(range(len(movies)),key=lambda i:lengths[i])
+  # sorted_movies = [(movies[i],lengths[i]) for i in ind]
+  # print(sorted_movies[:40])
+
+  # some are all on one line:
+  # American Outlaws, Made, Training Day
+  # "fixed" with the above
+     
+  movies = Movie.objects.all()
+  for i in trange(len(movies)):
+    m = movies[i]
+    # print(m.title)
+    f = codecs.open("raw/"+m.filename+".txt.clean01","r","utf8")
+    script = f.read()
+    f.close()
+    lines = script.split("\n")
+    types = ["u" for line in lines]
+    line_types = {"u":"unknown",
+     "b":"blank",
+     "s":"speaker",
+     "a":"action",
+     "p":"speaking direction",
+     "d":"dialogue",
+     "l":"slug (scene)",
+     "r":"right (cut to, etc)",}
+
+    bold_spacings = []
+    general_spacings = []
+    for i,line in enumerate(lines):
+      blank = re.findall(r"^[ ]*$",line)
+      if len(blank)>0:
+        types[i] = "b"
+        continue
+      bold = re.findall(r"<b>([ ]*)([A-Z\. \-'\(\)/:0-9\#]+)</b>",line)
+      if len(bold) > 0:
+        # print(bold)
+        space = bold[0][0]
+        bold_spacings.append(len(space))
+        text = bold[0][1].rstrip(" ")
+        types[i] = "l"
+        # lines[i] = space+text
+        continue
+      line_match = re.findall(r"^([ ]*)(.*?)$",line)
+      if len(line_match) > 0:
+        # if i<100:
+        #   print(line_match)
+        space = line_match[0][0]
+        general_spacings.append(len(space))
+        text = line_match[0][1].rstrip(" ")
+        types[i] = "a"
+        # lines[i] = space+text
+        
+    # print(bold_spacings[:100])
+    # print(np.mean(bold_spacings))
+    # print(general_spacings[:100])
+    # print(np.mean(general_spacings))
+    for i,line in enumerate(lines):
+      blank = re.findall(r"^[ ]*$",line)
+      if len(blank)>0:
+        types[i] = "b"
+        continue
+      bold = re.findall(r"<b>([ ]*)([A-Z\. \-'\(\)/:0-9\#]+)</b>",line)
+      if len(bold) > 0:
+        space = bold[0][0]
+        # this makes it a speaker
+        if len(space) > np.mean(bold_spacings):
+          types[i] = "s"
+        text = bold[0][1].rstrip(" ")
+        lines[i] = space+text
+        continue
+      line_match = re.findall(r"^([ ]*)(.*?)$",line)
+      if len(line_match) > 0:
+        space = line_match[0][0]
+        if len(space) > np.mean(general_spacings):
+          types[i] = "d"
+    f = codecs.open("raw/"+m.filename+".script","w","utf8")
+    f.write("\n".join([types[i].upper()+lines[i] for i in range(len(lines))]))
+    f.close()

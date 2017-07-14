@@ -34,7 +34,7 @@
 # 0,30 * * * * /usr/share/nginx/wiki/mysite/mysite/static/hedonometer/data/bigdaycache.cron
 
 # get the latest geo data from the VACC
-0,30 * * * * /usr/share/nginx/data/geodata/crongeo.sh >> /usr/share/nginx/data/geodata/crongeo.out 2>&1
+# 0,30 * * * * /usr/share/nginx/data/geodata/crongeo.sh >> /usr/share/nginx/data/geodata/crongeo.out 2>&1
 
 0 * * * * /usr/share/nginx/data/cronregions.sh >> /usr/share/nginx/data/cronregions.out 2>&1
 

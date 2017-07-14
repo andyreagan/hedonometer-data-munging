@@ -29,7 +29,7 @@ import copy
 import codecs
 import re
 
-sys.path.append('/home/prod/hedonometer')
+sys.path.append('/home/prod/app')
 
 from os import environ
 environ.setdefault('DJANGO_SETTINGS_MODULE','mysite.settings')
@@ -54,7 +54,7 @@ regions = [{'id': '79', 'lang': 'french', 'title': 'France', 'type': 'region'},
  {'id': '41', 'lang': 'french', 'title': 'Canada-fr', 'type': 'region'},
  {'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 
-# regions = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
+regions = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 
 def processregion(region,date):
     # check the day file is there
@@ -108,7 +108,7 @@ def loopdates(startdate,enddate):
 def rsync_main(region,date):
     if not isdir('/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower())):
         mkdir('/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower()))
-    subprocess.call("rsync -avzr --ignore-existing vacc2:/users/a/r/areagan/scratch/realtime-parsing/word-vectors/{0}/ word-vectors/{1}/{0}".format(date.strftime('%Y-%m-%d'),region["title"].lower()),shell=True)
+    subprocess.call("rsync -avzr vacc2:/users/a/r/areagan/scratch/realtime-parsing/word-vectors/{0}/ word-vectors/{1}/{0}".format(date.strftime('%Y-%m-%d'),region["title"].lower()),shell=True)
 
 def rsync(region,date):
     # print "trying to get the file"
@@ -145,14 +145,18 @@ def add_main(start,end,region):
     # check that all of the files are there
     date = start
     allfiles = True
+    n_files = 0
     while date<end:
         if not isfile(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower()))):
             print('missing {0}'.format(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower()))))
             allfiles = False
-            break
+            # break
+        else:
+            n_files += 1
         date+=fifteen_minutes
     # can either need all of the files, or not
     # using the if True works for doing the full historical one
+    # if allfiles or n_files > (24*4-2):
     if allfiles:
         print('all files found')
     # if True:
@@ -264,7 +268,7 @@ def timeseries(start,region,useStopWindow=True):
     # # print len(daywordarray)
     # compute happiness of the word vectors
     if useStopWindow:
-        stoppedVec = stopper(daywordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggaz","niggas","nigger"])
+        stoppedVec = stopper(daywordarray,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggaz","niggas","nigger","nice"])
         happs = emotionV(stoppedVec,labMTvector)
     else:
         happs = emotionV(daywordarray,labMTvector)
@@ -321,8 +325,8 @@ def preshift(start,region):
     previous_word_array = genfromtxt('word-vectors/{1}/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d'),region["title"].lower()))
 
     # compute happiness of the word vectors
-    word_array_stopped = stopper(word_array,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger"])
-    previous_word_array_stopped = stopper(previous_word_array,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger"])
+    word_array_stopped = stopper(word_array,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger","nice"])
+    previous_word_array_stopped = stopper(previous_word_array,labMTvector,labMTwordList,ignore=["thirsty","pakistan","india","nigga","niggas","niggaz","nigger","nice"])
     happs = emotionV(word_array_stopped,labMTvector)
     prevhapps = emotionV(previous_word_array_stopped,labMTvector)
     # print happs
@@ -379,6 +383,9 @@ def sort_sum_happs():
             if not date in dates:
                 dates.append(date)
                 happss.append(happs)
+            # later dates take precendence
+            else:
+                happss[dates.index(date)] = happs
         f.close()
         # now sort
         indexer = sorted(list(range(len(dates))), key=lambda k: dates[k])
@@ -449,7 +456,7 @@ if __name__ == '__main__':
     # end = datetime.datetime(2015,5,27)
     end = datetime.datetime.now()
     end -= datetime.timedelta(hours=end.hour,minutes=end.minute,seconds=end.second,microseconds=end.microsecond)
-    start = end - datetime.timedelta(days=20)
+    start = end - datetime.timedelta(days=40)
     # start = datetime.datetime(2008,9,9)
     # start = datetime.datetime(2010,1,1)
 

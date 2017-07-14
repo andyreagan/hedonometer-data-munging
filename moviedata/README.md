@@ -302,3 +302,16 @@ Have to do everything myself if I want to understand it....
 Now to go ahead and make a page.
 I'll need to write another script for the backend part which fills out the happs from the database model and writes a word-vector file.
 Made `word-vectors/full` folder and going to push the full script word vectors into that.
+
+2016-11-04
+
+Started digging in again yesterday.
+Lots added to the end of chopmovies.py.
+Confirmed there are 1090 in scriptsClean folder from Lewis, and working on processing them even better in the raw folder (points to rawer-take2), made a .txt version and a .txt.clean version.
+Also made sure 1090 database model entries, and there are 40 or so still missing IMDB info (there were 1091, cleaned it up).
+Part of the chopmovies.py script is a for loop that will ping the API, I think that there are about 20 to go yet.
+The open database has info that I don't have saved in the database models, but the actor/director info isn't as good, so try to finish with the apathetic API first, then I'll go back and add the IMDB rating (e.g., 7.2/10), number of reviews from users info.
+http://www.omdbapi.com/
+
+
+

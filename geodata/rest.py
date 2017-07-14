@@ -31,7 +31,7 @@ def sumfilesall(start,end,array):
                 del(tmp[-1])
             # clean to 10222 in each state
             for i in xrange(51):
-                tmp[i] = map(int,tmp[i].split(','))
+                tmp[i] = map(int,map(float,tmp[i].split(',')))
                 while len(tmp[i]) > 10222:
                     del(tmp[i][-1])
                     
@@ -39,6 +39,7 @@ def sumfilesall(start,end,array):
 
         except:
             print "could not load {0}".format(curr.strftime('%Y-%m-%d'))
+            raise
             
         curr+=datetime.timedelta(days=1)
 
@@ -55,7 +56,10 @@ def sumfiles(start,end,array,state):
             tmp = []
             for line in f:
                 # print line
-                tmp.append(map(int,line.split(','))[0:10222])
+                split_line = line.rstrip().split(',')
+                # print(len(split_line))
+                int_line = map(int,map(float,split_line))
+                tmp.append(int_line[0:10222])
             f.close()
             
             # collapse if there was only one
@@ -66,7 +70,7 @@ def sumfiles(start,end,array,state):
 
         except:
             print "could not load word-vectors/{1}/{0}-{1}-word-vector.csv".format(curr.strftime('%Y-%m-%d'),state)
-            # raise
+            raise
             
         curr+=datetime.timedelta(days=1)
 
