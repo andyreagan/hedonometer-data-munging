@@ -10,7 +10,7 @@ import codecs # handle utf8
 import sys # for user inpurt
 import re
 from labMTsimple.storyLab import *
-sys.path.append('/home/prod/hedonometer')
+sys.path.append('/home/prod/app')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'
 from django.conf import settings
 
@@ -51,9 +51,10 @@ def chopper(words,labMT,labMTvector,outfile,minSize=1000):
 if __name__ == "__main__":
   rawbook,saveas,lang,author,title = sys.argv[1:]
 
-  labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,fileName='labMT2'+lang+'.txt',returnVector=True)
+  labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
 
-  f = codecs.open(rawbook,"r","utf8")
+  # f = codecs.open(rawbook,"r","utf8")
+  f = open(rawbook,"r")
   raw_text = f.read()
   f.close()
 
