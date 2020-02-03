@@ -520,7 +520,7 @@ if __name__ == '__main__':
     end -= datetime.timedelta(hours=end.hour, minutes=end.minute,
                               seconds=end.second, microseconds=end.microsecond)
     start = end - datetime.timedelta(days=40)
-    start = datetime.datetime(2008, 9, 9)
+    # start = datetime.datetime(2008, 9, 9)
     # start = datetime.datetime(2010,1,1)
 
     loopdates(start, end)

@@ -1,13 +1,25 @@
+# emacs stuff
 *~
-word-vectors
-combined-word-vectors
-shifts
+
+# secrets
 keys
 hedostatuskeys
-wordCounts*
+
+# data files
 *.out
 *.csv
 *.pyc
 *.zip
 *.tgz
-screenshots
+
+# data folders
+shifts/
+word-vectors/
+sotu/
+outside/
+music/
+teledata/
+moviedata/
+embeds/
+bookdata/
+bookarcs/
