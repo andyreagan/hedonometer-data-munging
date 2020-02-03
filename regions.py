@@ -56,6 +56,8 @@ regions = [{'id': '79', 'lang': 'french', 'title': 'France', 'type': 'region'},
 
 regions = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 
+IGNORE_WORDS = []
+
 def processregion(region,date):
     # check the day file is there
     if not isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
@@ -66,17 +68,17 @@ def processregion(region,date):
         elif region["type"] == "main":
             print("proccessing main {0}".format(region["title"]))
             rsync_main(region,date)
-            add_main(date,date+datetime.timedelta(days=1),region)
+            # add_main(date,date+datetime.timedelta(days=1),region)
         else:
             print("unknown region type {0}".format(region["type"]))
 
         if isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))):
 
             print("found sum file, doing stuff")
-            
+
             # first time this file moved over here, check the format
             switch_delimiter(',','\n','/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(),datetime.datetime.strftime(date,'%Y-%m-%d')))
-            
+
             # add up the previous vectors
             rest('prevvectors',date,date,region)
 
@@ -90,7 +92,8 @@ def processregion(region,date):
             sort_sum_happs()
         else:
             pass
-    
+
+
 def allregions(date):
     for region in regions:
         print "processing region {0} on {1}".format(region["title"].lower(),datetime.datetime.strftime(date,'%Y-%m-%d'))
@@ -100,15 +103,19 @@ def allregions(date):
         # except:
         #     print "failed"
 
+
 def loopdates(startdate,enddate):
     while startdate <= enddate:
         allregions(startdate)
         startdate += datetime.timedelta(days=1)
 
+
 def rsync_main(region,date):
     if not isdir('/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower())):
         mkdir('/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower()))
-    subprocess.call("rsync -avzr vacc2:/users/a/r/areagan/scratch/realtime-parsing/word-vectors/{0}/ word-vectors/{1}/{0}".format(date.strftime('%Y-%m-%d'),region["title"].lower()),shell=True)
+    DIR = '/users/j/m/jminot/scratch/labmt/storywrangler_en'
+    subprocess.call("rsync -avzr vacc2:{2}/{0}.txt word-vectors/{1}/{0}-sum.csv".format(date.strftime('%Y-%m-%d'),region["title"].lower(), DIR),shell=True)
+
 
 def rsync(region,date):
     # print "trying to get the file"
@@ -457,7 +464,7 @@ if __name__ == '__main__':
     end = datetime.datetime.now()
     end -= datetime.timedelta(hours=end.hour,minutes=end.minute,seconds=end.second,microseconds=end.microsecond)
     start = end - datetime.timedelta(days=40)
-    # start = datetime.datetime(2008,9,9)
+    start = datetime.datetime(2008,9,9)
     # start = datetime.datetime(2010,1,1)
 
     loopdates(start,end)
