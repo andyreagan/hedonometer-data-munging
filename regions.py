@@ -21,22 +21,19 @@
 import codecs
 import copy
 import datetime
-import re
 import subprocess
 import sys
 from os import environ, mkdir
 from os.path import isdir, isfile
 
 from django.conf import settings
-from labMTsimple.storyLab import *
-from numpy import array, float, genfromtxt, zeros
-
-from hedonometer.models import Timeseries
+from labMTsimple.storyLab import emotionFileReader, emotionV, stopper, shift
+from numpy import float, genfromtxt, zeros
 
 sys.path.append('/home/prod/app')
-
 environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
 
+from hedonometer.models import Timeseries
 
 # regions = [["France","79","french",],["Germany","86","german",],["England","239","english",],["Spain","213","spanish",],["Brazil","32","portuguese",],["Mexico","145","spanish",],["South-Korea","211","korean",],["Egypt","69","arabic",],["Australia","14","english",],["New-Zealand","160","english",],["Canada","41","english",],["Canada-fr","41","french",],]
 
@@ -56,7 +53,8 @@ regions = [{'id': '79', 'lang': 'french', 'title': 'France', 'type': 'region'},
 
 regions = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 
-IGNORE_WORDS = []
+with open("stopwords.csv", "r") as f:
+    IGNORE = f.read().split("\n")
 
 
 def processregion(region, date):
@@ -307,8 +305,8 @@ def timeseries(start, region, useStopWindow=True):
     # # print len(daywordarray)
     # compute happiness of the word vectors
     if useStopWindow:
-        stoppedVec = stopper(daywordarray, labMTvector, labMTwordList, ignore=[
-                             "thirsty", "pakistan", "india", "nigga", "niggaz", "niggas", "nigger", "nice"])
+        stoppedVec = stopper(daywordarray, labMTvector, labMTwordList, ignore=IGNORE)
+                             
         happs = emotionV(stoppedVec, labMTvector)
     else:
         happs = emotionV(daywordarray, labMTvector)
@@ -372,10 +370,8 @@ def preshift(start, region):
         'word-vectors/{1}/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d'), region["title"].lower()))
 
     # compute happiness of the word vectors
-    word_array_stopped = stopper(word_array, labMTvector, labMTwordList, ignore=[
-                                 "thirsty", "pakistan", "india", "nigga", "niggas", "niggaz", "nigger", "nice"])
-    previous_word_array_stopped = stopper(previous_word_array, labMTvector, labMTwordList, ignore=[
-                                          "thirsty", "pakistan", "india", "nigga", "niggas", "niggaz", "nigger", "nice"])
+    word_array_stopped = stopper(word_array, labMTvector, labMTwordList, ignore=IGNORE)
+    previous_word_array_stopped = stopper(previous_word_array, labMTvector, labMTwordList, ignore=IGNORE)
     happs = emotionV(word_array_stopped, labMTvector)
     prevhapps = emotionV(previous_word_array_stopped, labMTvector)
     # print happs
