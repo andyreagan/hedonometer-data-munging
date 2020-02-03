@@ -1,14 +1,15 @@
-from twython import Twython, TwythonError
-from sys import argv
 import datetime
-from urllib2 import Request, urlopen, URLError
 import json
+from sys import argv
+from urllib2 import Request, URLError, urlopen
+
+from twython import Twython, TwythonError
 
 
 def tweetit(text):
 
     # store the keys somewhere (so I can share this script)
-    f = open('hedostatuskeys','r')
+    f = open('hedostatuskeys', 'r')
     APP_KEY = f.readline().rstrip()
     print APP_KEY
     APP_SECRET = f.readline().rstrip()
@@ -19,20 +20,22 @@ def tweetit(text):
     print OAUTH_TOKEN_SECRET
     f.close()
 
-    twitter = Twython(APP_KEY,APP_SECRET,OAUTH_TOKEN,OAUTH_TOKEN_SECRET)
+    twitter = Twython(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
 
     try:
         twitter.update_status(status=text)
     except TwythonError as e:
         print e
 
+
 if __name__ == '__main__':
 
     d = argv[1]
-    date = datetime.datetime.strptime(d,'%Y-%m-%d')
+    date = datetime.datetime.strptime(d, '%Y-%m-%d')
     print date
 
-    rurl = 'http://hedonometer.org/api/v1/timeseries/?format=json&date={0}'.format(date.strftime('%Y-%m-%d'))
+    rurl = 'http://hedonometer.org/api/v1/timeseries/?format=json&date={0}'.format(
+        date.strftime('%Y-%m-%d'))
     request = Request(rurl)
 
     print rurl
@@ -50,8 +53,5 @@ if __name__ == '__main__':
         else:
             print 'were okay'
     except URLError, e:
-        tweet='error from {0}'.format(rurl)
+        tweet = 'error from {0}'.format(rurl)
         print tweet
-
-
-

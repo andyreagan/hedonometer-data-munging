@@ -3,23 +3,24 @@
 # compute happiness at hour level, day level
 # for all keywords
 #
-# USAGE: 
+# USAGE:
 # python timeseries.py append 2014-01-01 2014-06-26 english
 
 import codecs
-from labMTsimple.storyLab import *
-import datetime
 import copy
-import numpy as np
-import sys
+import datetime
 import re
+import sys
+
+import numpy as np
+from labMTsimple.storyLab import *
 
 if __name__ == '__main__':
-    [year,month,day] = map(int,sys.argv[1].split('-'))
-    start = datetime.datetime(year,month,day)
+    [year, month, day] = map(int, sys.argv[1].split('-'))
+    start = datetime.datetime(year, month, day)
 
-    [year,month,day] = map(int,sys.argv[2].split('-'))
-    end = datetime.datetime(year,month,day)
+    [year, month, day] = map(int, sys.argv[2].split('-'))
+    end = datetime.datetime(year, month, day)
 
     goal = sys.argv[3]
 
@@ -28,21 +29,22 @@ if __name__ == '__main__':
 
     useStopWindow = True
     if len(sys.argv) > 5:
-        if sys.argv[5] in ["false","False","0"]:
+        if sys.argv[5] in ["false", "False", "0"]:
             useStopWindow = False
             print "not using a stop window"
 
-    labMT,labMTvector,labMTwordList = emotionFileReader(stopval=0.0,lang=lang,returnVector=True)
+    labMT, labMTvector, labMTwordList = emotionFileReader(
+        stopval=0.0, lang=lang, returnVector=True)
     numw = len(labMTvector)
     if goal == "recompute":
         print "opening in write mode"
-        g = codecs.open('word-vectors/'+lang+'/sumhapps.csv','w','utf8')
+        g = codecs.open('word-vectors/'+lang+'/sumhapps.csv', 'w', 'utf8')
         g.write('date,value\n')
-        h = codecs.open('word-vectors/'+lang+'/sumfreq.csv','w','utf8')
+        h = codecs.open('word-vectors/'+lang+'/sumfreq.csv', 'w', 'utf8')
     else:
-        print "opening in append mode"        
-        g = codecs.open('word-vectors/'+lang+'/sumhapps.csv','a','utf8')
-        h = codecs.open('word-vectors/'+lang+'/sumfreq.csv','a','utf8')
+        print "opening in append mode"
+        g = codecs.open('word-vectors/'+lang+'/sumhapps.csv', 'a', 'utf8')
+        h = codecs.open('word-vectors/'+lang+'/sumfreq.csv', 'a', 'utf8')
     # loop over time
     currDay = copy.copy(start)
     while currDay <= end:
@@ -52,29 +54,37 @@ if __name__ == '__main__':
         wordarray = [np.zeros(numw) for i in xrange(24)]
         daywordarray = np.zeros(numw)
 
-        print 'reading word-vectors/'+lang+'/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
+        print 'reading word-vectors/'+lang + \
+            '/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
         try:
-            f = codecs.open('word-vectors/'+lang+'/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')),'r','utf8')
-            daywordarray = np.array(map(float,f.read().split('\n')[0:numw]))
+            f = codecs.open(
+                'word-vectors/'+lang+'/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')), 'r', 'utf8')
+            daywordarray = np.array(map(float, f.read().split('\n')[0:numw]))
             f.close()
             # print daywordarray
             # print len(daywordarray)
             # compute happiness of the word vectors
             if useStopWindow:
-                stoppedVec = stopper(daywordarray,labMTvector,labMTwordList,ignore=["lynch","thirsty","pakistan","india","nigga","niggaz","niggas","nigger"])
-                happs = emotionV(stoppedVec,labMTvector)
+                stoppedVec = stopper(daywordarray, labMTvector, labMTwordList, ignore=[
+                                     "lynch", "thirsty", "pakistan", "india", "nigga", "niggaz", "niggas", "nigger"])
+                happs = emotionV(stoppedVec, labMTvector)
             else:
-                happs = emotionV(daywordarray,labMTvector)
+                happs = emotionV(daywordarray, labMTvector)
             dayhappsarray[0] = happs
 
             # write out the day happs
-            print 'writing word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),lang)
-            f = codecs.open('word-vectors/{1}/{0}-sumhapps.csv'.format(currDay.strftime('%Y-%m-%d'),lang),'w','utf8')
-            f.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))    
+            print 'writing word-vectors/{1}/{0}'.format(
+                currDay.strftime('%Y-%m-%d-sum.csv'), lang)
+            f = codecs.open('word-vectors/{1}/{0}-sumhapps.csv'.format(
+                currDay.strftime('%Y-%m-%d'), lang), 'w', 'utf8')
+            f.write('{0},{1}\n'.format(
+                currDay.strftime('%Y-%m-%d'), dayhappsarray[0]))
             f.close()
-    
-            g.write('{0},{1}\n'.format(currDay.strftime('%Y-%m-%d'),dayhappsarray[0]))
-            h.write('{0},{1:.0f}\n'.format(currDay.strftime('%Y-%m-%d'),sum(daywordarray)))
+
+            g.write('{0},{1}\n'.format(
+                currDay.strftime('%Y-%m-%d'), dayhappsarray[0]))
+            h.write('{0},{1:.0f}\n'.format(
+                currDay.strftime('%Y-%m-%d'), sum(daywordarray)))
         except:
             print "failed"
 
@@ -94,10 +104,6 @@ if __name__ == '__main__':
 
         # increase the days
         currDay += datetime.timedelta(days=1)
-        
+
     g.close()
     h.close()
-
-
-
-
