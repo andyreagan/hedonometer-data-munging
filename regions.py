@@ -34,6 +34,8 @@ from hedonometer.models import Timeseries
 REGIONS = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 DATA_DIR = "/usr/share/nginx/data"
 SOURCE_DIR = '/users/j/m/jminot/scratch/labmt/storywrangler_en'
+with open(os.path.join(DATA_DIR, REGIONS[0]["title"].lower(), "stopwords.csv"), "r") as f:
+    IGNORE = f.read().split("\n")
 
 
 def processregion(region, date):
@@ -68,8 +70,6 @@ def allregions(date):
             region["title"].lower(),
             datetime.datetime.strftime(date, '%Y-%m-%d'))
         )
-        with open(os.path.join(DATA_DIR, region["title"].lower(), "stopwords.csv"), "r") as f:
-            IGNORE = f.read().split("\n")
         processregion(region, date)
         print("success")
 
