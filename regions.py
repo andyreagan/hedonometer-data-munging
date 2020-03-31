@@ -31,16 +31,14 @@ from numpy import float, genfromtxt, zeros
 
 from hedonometer.models import Timeseries
 
-REGIONS = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 DATA_DIR = "/usr/share/nginx/data"
-SOURCE_DIR = '/users/j/m/jminot/scratch/labmt/storywrangler_en'
-with open(os.path.join(DATA_DIR, REGIONS[0]["title"].lower(), "stopwords.csv"), "r") as f:
+with open(os.path.join(DATA_DIR, Timeseries.objects.all()[0].directory, "stopwords.csv"), "r") as f:
     IGNORE = f.read().split("\n")
 
 
 def processregion(region, date):
     # check the day file is there
-    sumfile = os.path.join(DATA_DIR, 'word-vectors', region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d-sum.csv'))
+    sumfile = os.path.join(DATA_DIR, region.directory, region.wordVecDir, datetime.datetime.strftime(date, '%Y-%m-%d-sum.csv'))
     if not isfile(sumfile):
         print("proccessing {0} for {1}".format(region["title"].lower(), sumfile))
         rsync_main(region, date)
@@ -58,16 +56,15 @@ def processregion(region, date):
 
             preshift(date, region)
 
-            if not region["type"] == "main":
-                updateModel(date, region)
+            updateModel(date, region)
 
             sort_sum_happs(region)
 
 
 def allregions(date):
-    for region in REGIONS:
+    for region in Timeseries.objects.all():
         print("processing region {0} on {1}".format(
-            region["title"].lower(),
+            region.title,
             datetime.datetime.strftime(date, '%Y-%m-%d'))
         )
         processregion(region, date)
@@ -81,13 +78,13 @@ def loopdates(startdate, enddate):
 
 
 def rsync_main(region, date):
-    wordvec_dir = os.path.join(DATA_DIR, 'word-vectors', region["title"].lower())
+    wordvec_dir = os.path.join(DATA_DIR, region.directory, region.wordVecDir)
     print(wordvec_dir)
     if not isdir(wordvec_dir):
         print("creating", wordvec_dir)
         mkdir(wordvec_dir)
     command = "rsync -avzr vacc2:{source_file} {dest_file}".format(
-        source_file=os.path.join(SOURCE_DIR, date.strftime('%Y-%m-%d.txt')),
+        source_file=os.path.join(region.sourceDir, date.strftime('%Y-%m-%d.txt')),
         dest_file=os.path.join(wordvec_dir, date.strftime('%Y-%m-%d-sum.csv'))
     )
     print(command)
@@ -99,7 +96,6 @@ def sumfiles(start, end, wordvec, title, numw):
     while curr <= end:
         sumfile = os.path.join(
             DATA_DIR,
-            'word-vectors',
             title,
             curr.strftime('%Y-%m-%d-sum.csv')
         )
@@ -119,7 +115,7 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
     # if the option is list, pass it an outfile and days list
     if option == 'prevvectors':
         labMT, labMTvector, labMTwordList = emotionFileReader(
-            stopval=0.0, lang=region["lang"], returnVector=True)
+            stopval=0.0, lang=region.language, returnVector=True)
         numw = len(labMTvector)
 
         maincurr = copy.copy(start + datetime.timedelta(days=-1))
@@ -128,15 +124,15 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
             # added the try loop to handle failure inside the sumfiles
             # try:
             [total, date] = sumfiles(maincurr + datetime.timedelta(days=-6), maincurr +
-                                     datetime.timedelta(days=0), wordvec, region["title"].lower(), numw)
+                                     datetime.timedelta(days=0), wordvec, os.path.join(region.directory, region.wordVecDir), numw)
 
             # if it's empty, add the word "happy"
             if sum(total) == 0:
                 total[3] = 1
             sumfile = os.path.join(
                 DATA_DIR,
-                'word-vectors',
-                region["title"].lower(),
+                region.directory,
+                region.wordVecDir,
                 date.strftime('%Y-%m-%d-prev7.csv')
             )
             # write the total into a file for date
@@ -147,13 +143,13 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
 
     if option == 'range':
         labMT, labMTvector, labMTwordList = emotionFileReader(
-            stopval=0.0, lang=region["lang"], returnVector=True)
+            stopval=0.0, lang=region.language, returnVector=True)
         numw = len(labMTvector)
 
         wordvec = zeros(numw)
 
         [total, date] = sumfiles(
-            start, end, wordvec, region["title"].lower(), numw)
+            start, end, wordvec, os.path.join(region.directory, region.wordVecDir), numw)
 
         # write the total into a file for date
         f = open(outfile, 'w')
@@ -162,14 +158,14 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
 
     if option == 'list':
         labMT, labMTvector, labMTwordList = emotionFileReader(
-            stopval=0.0, lang=region["lang"], returnVector=True)
+            stopval=0.0, lang=region.language, returnVector=True)
         numw = len(labMTvector)
 
         wordvec = zeros(numw)
         for day in days:
             # this should handle the array object by reference
             [tmp, date] = sumfiles(
-                day, day, wordvec, region["title"].lower(), numw)
+                day, day, wordvec, os.path.join(region.directory, region.wordVecDir), numw)
             wordvec += tmp
 
         # write the total into a file for date
@@ -180,31 +176,27 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
 
 def timeseries(start, region, useStopWindow=True):
     labMT, labMTvector, labMTwordList = emotionFileReader(
-        stopval=0.0, lang=region["lang"], returnVector=True)
+        stopval=0.0, lang=region.language, returnVector=True)
     numw = len(labMTvector)
 
     sumhapps = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         'sumhapps.csv'
     )
     sumfreq = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         'sumfreq.csv'
     )
     sumfile = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         start.strftime('%Y-%m-%d-sum.csv')
     )
     happsfile = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         start.strftime('%Y-%m-%d-happs.csv')
     )
 
@@ -254,30 +246,26 @@ def updateModel(start, region):
 
 def preshift(start, region):
     labMT, labMTvector, labMTwordList = emotionFileReader(
-        stopval=0.0, lang=region["lang"], returnVector=True)
+        stopval=0.0, lang=region.language, returnVector=True)
 
     sumfile = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         start.strftime('%Y-%m-%d-sum.csv')
     )
     prevfile = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         start.strftime('%Y-%m-%d-prev7.csv')
     )
     shiftfile = os.path.join(
         DATA_DIR,
-        'shifts',
-        region["title"].lower(),
+        region.directory, region.shiftDir,
         start.strftime('%Y-%m-%d-shift.csv')
     )
     metashiftfile = os.path.join(
         DATA_DIR,
-        'shifts',
-        region["title"].lower(),
+        region.directory, region.shiftDir,
         start.strftime('%Y-%m-%d-metashift.csv')
     )
     word_array = genfromtxt(sumfile)
@@ -315,14 +303,12 @@ def preshift(start, region):
 def sort_sum_happs(region):
     sumhapps = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         'sumhapps.csv'
     )
     sumfreq = os.path.join(
         DATA_DIR,
-        'word-vectors',
-        region["title"].lower(),
+        region.directory, region.wordVecDir,
         'sumfreq.csv'
     )
     f = open(sumhapps, 'r')
