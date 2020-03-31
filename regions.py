@@ -40,7 +40,7 @@ def processregion(region, date):
     # check the day file is there
     sumfile = os.path.join(DATA_DIR, 'word-vectors', region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d-sum.csv'))
     if not isfile(sumfile):
-        print("proccessing main {0}".format(region["title"]))
+        print("proccessing {0} for {1}".format(region["title"].lower(), sumfile))
         rsync_main(region, date)
 
         if isfile(sumfile):
@@ -82,14 +82,16 @@ def loopdates(startdate, enddate):
 
 def rsync_main(region, date):
     wordvec_dir = os.path.join(DATA_DIR, 'word-vectors', region["title"].lower())
+    print(wordvec_dir)
     if not isdir(wordvec_dir):
+        print("creating", wordvec_dir)
         mkdir(wordvec_dir)
-
-    subprocess.call("rsync -avzr vacc2:{source_file} {dest_file}".format(
+    command = "rsync -avzr vacc2:{source_file} {dest_file}".format(
         source_file=os.path.join(SOURCE_DIR, date.strftime('%Y-%m-%d.txt')),
-        dest_file=os.path.join(wordvec_dir, date.strftime('%Y-%m-%d-sum.csv')),
-        shell=True
-    ))
+        dest_file=os.path.join(wordvec_dir, date.strftime('%Y-%m-%d-sum.csv'))
+    )
+    print(command)
+    subprocess.call(command,shell=True)
 
 
 def sumfiles(start, end, wordvec, title, numw):
