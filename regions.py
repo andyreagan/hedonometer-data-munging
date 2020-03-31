@@ -22,11 +22,10 @@ import codecs
 import copy
 import datetime
 import subprocess
-import sys
-from os import environ, mkdir
+import os
+from os import mkdir
 from os.path import isdir, isfile
 
-from django.conf import settings
 from labMTsimple.storyLab import emotionFileReader, emotionV, shift, stopper
 from numpy import float, genfromtxt, zeros
 
@@ -36,24 +35,19 @@ REGIONS = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
 DATA_DIR = "/usr/share/nginx/data"
 SOURCE_DIR = '/users/j/m/jminot/scratch/labmt/storywrangler_en'
 
-with open("stopwords.csv", "r") as f:
-    IGNORE = f.read().split("\n")
-
 
 def processregion(region, date):
     # check the day file is there
-    if not isfile(os.path.join(DATA_DIR, 'word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d')))):
+    sumfile = os.path.join(DATA_DIR, 'word-vectors', region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d-sum.csv'))
+    if not isfile(sumfile):
         print("proccessing main {0}".format(region["title"]))
         rsync_main(region, date)
-        # add_main(date,date+datetime.timedelta(days=1),region)
 
-        if isfile(os.path.join(DATA_DIR, 'word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d')))):
-
+        if isfile(sumfile):
             print("found sum file, doing stuff")
 
             # first time this file moved over here, check the format
-            switch_delimiter(',', '\n', os.path.join(DATA_DIR, 'word-vectors/{0}/{1}-sum.csv'.format(
-                region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d'))))
+            switch_delimiter(',', '\n', sumfile)
 
             # add up the previous vectors
             rest('prevvectors', date, date, region)
@@ -65,15 +59,17 @@ def processregion(region, date):
             if not region["type"] == "main":
                 updateModel(date, region)
 
-            sort_sum_happs()
-        else:
-            pass
+            sort_sum_happs(region)
 
 
 def allregions(date):
     for region in REGIONS:
         print("processing region {0} on {1}".format(
-            region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d')))
+            region["title"].lower(),
+            datetime.datetime.strftime(date, '%Y-%m-%d'))
+        )
+        with open(os.path.join(DATA_DIR, region["title"].lower(), "stopwords.csv"), "r") as f:
+            IGNORE = f.read().split("\n")
         processregion(region, date)
         print("success")
 
@@ -85,77 +81,35 @@ def loopdates(startdate, enddate):
 
 
 def rsync_main(region, date):
-    if not isdir(os.path.join(DATA_DIR, 'word-vectors/{0}'.format(region["title"].lower())):
-        mkdir(
-            os.path.join(DATA_DIR, 'word-vectors/{0}'.format(region["title"].lower())))
+    wordvec_dir = os.path.join(DATA_DIR, 'word-vectors', region["title"].lower())
+    if not isdir(wordvec_dir):
+        mkdir(wordvec_dir)
 
-    subprocess.call("rsync -avzr vacc2:{2}/{0}.txt word-vectors/{1}/{0}-sum.csv".format(
-        date.strftime('%Y-%m-%d'), region["title"].lower(), SOURCE_DIR), shell=True)
+    subprocess.call("rsync -avzr vacc2:{source_file} {dest_file}".format(
+        source_file=os.path.join(SOURCE_DIR, date.strftime('%Y-%m-%d.txt')),
+        dest_file=os.path.join(wordvec_dir, date.strftime('%Y-%m-%d-sum.csv')),
+        shell=True
+    ))
 
 
 def sumfiles(start, end, wordvec, title, numw):
     curr = copy.copy(start)
     while curr <= end:
+        sumfile = os.path.join(
+            DATA_DIR,
+            'word-vectors',
+            title,
+            curr.strftime('%Y-%m-%d-sum.csv')
+        )
         try:
-            switch_delimiter(
-                ',', '\n', 'word-vectors/{1}/{0}-sum.csv'.format(curr.strftime('%Y-%m-%d'), title))
-            a = genfromtxt(
-                'word-vectors/{1}/{0}-sum.csv'.format(curr.strftime('%Y-%m-%d'), title), dtype=float)
+            switch_delimiter(',', '\n', sumfile)
+            a = genfromtxt(sumfile, dtype=float)
             wordvec = wordvec + a
         except:
-            print('could not load word-vectors/{1}/{0}-sum.csv'.format(
-                curr.strftime('%Y-%m-%d'), title))
+            print('could not load {0}'.format(sumfile))
         curr += datetime.timedelta(days=1)
 
     return wordvec, curr
-
-
-def add_main(start, end, region):
-    fifteen_minutes = datetime.timedelta(minutes=15)
-    labMT, labMTvector, labMTwordList = emotionFileReader(
-        stopval=0.0, lang=region["lang"], returnVector=True)
-    numw = len(labMTvector)
-    my_array = zeros(numw)
-
-    # check that all of the files are there
-    date = start
-    allfiles = True
-    n_files = 0
-    while date < end:
-        if not isfile(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower()))):
-            print('missing {0}'.format(date.strftime(
-                'word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower()))))
-            allfiles = False
-            # break
-        else:
-            n_files += 1
-        date += fifteen_minutes
-    # can either need all of the files, or not
-    # using the if True works for doing the full historical one
-    # if allfiles or n_files > (24*4-2):
-    if allfiles:
-        print('all files found')
-    # if True:
-        date = start
-        while date < end:
-            if isfile(date.strftime('word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower()))):
-                switch_delimiter(',', '\n', date.strftime(
-                    'word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())))
-                a = genfromtxt(date.strftime(
-                    'word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())), dtype=float)
-                print(date.strftime(
-                    'word-vectors/{0}/%Y-%m-%d/%Y-%m-%d-%H-%M.csv'.format(region["title"].lower())))
-                print(a)
-                my_array += a
-            date += fifteen_minutes
-        print(my_array)
-        if sum(my_array) > 0:
-            f = open(start.strftime(
-                'word-vectors/{0}/%Y-%m-%d-sum.csv'.format(region["title"].lower())), 'w')
-            f.write('\n'.join(['{0:.0f}'.format(x) for x in my_array]))
-            f.close()
-    else:
-        print('not all files found')
 
 
 def rest(option, start, end, region, outfile='test.csv', days=[]):
@@ -177,10 +131,14 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
             # if it's empty, add the word "happy"
             if sum(total) == 0:
                 total[3] = 1
-
+            sumfile = os.path.join(
+                DATA_DIR,
+                'word-vectors',
+                region["title"].lower(),
+                date.strftime('%Y-%m-%d-prev7.csv')
+            )
             # write the total into a file for date
-            f = open('word-vectors/{1}/{0}-prev7.csv'.format(
-                date.strftime('%Y-%m-%d'), region["title"].lower()), 'w')
+            f = open(sumfile, 'w')
             f.write('\n'.join(['{0:.0f}'.format(x) for x in total]))
             f.close()
             maincurr += datetime.timedelta(days=1)
@@ -223,22 +181,39 @@ def timeseries(start, region, useStopWindow=True):
         stopval=0.0, lang=region["lang"], returnVector=True)
     numw = len(labMTvector)
 
-    g = codecs.open('word-vectors/' +
-                    region["title"].lower() + '/sumhapps.csv', 'a', 'utf8')
-    h = codecs.open('word-vectors/' +
-                    region["title"].lower() + '/sumfreq.csv', 'a', 'utf8')
+    sumhapps = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        'sumhapps.csv'
+    )
+    sumfreq = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        'sumfreq.csv'
+    )
+    sumfile = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        start.strftime('%Y-%m-%d-sum.csv')
+    )
+    happsfile = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        start.strftime('%Y-%m-%d-happs.csv')
+    )
 
-    # loop over time
-    currDay = copy.copy(start)
+    g = codecs.open(sumhapps, 'a', 'utf8')
+    h = codecs.open(sumfreq, 'a', 'utf8')
 
     # empty array
-    happsarray = zeros(24)
     dayhappsarray = zeros(1)
-    wordarray = [zeros(numw) for i in xrange(24)]
     daywordarray = zeros(numw)
 
-    daywordarray = genfromtxt('word-vectors/' + region["title"].lower(
-    ) + '/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')), dtype=float)
+    daywordarray = genfromtxt(sumfile, dtype=float)
 
     # compute happiness of the word vectors
     if useStopWindow:
@@ -252,18 +227,17 @@ def timeseries(start, region, useStopWindow=True):
 
     if dayhappsarray[0] > 0:
         # write out the day happs
-        f = codecs.open('word-vectors/{1}/{0}-happs.csv'.format(
-            currDay.strftime('%Y-%m-%d'), region["title"].lower()), 'w', 'utf8')
+        f = codecs.open(happsfile, 'w', 'utf8')
         f.write('{0}'.format(dayhappsarray[0]))
         f.close()
 
         # add to main file
         g.write('{0},{1}\n'.format(
-            currDay.strftime('%Y-%m-%d'), dayhappsarray[0]))
+            start.strftime('%Y-%m-%d'), dayhappsarray[0]))
 
     # always write out the frequency
     h.write('{0},{1:.0f}\n'.format(
-        currDay.strftime('%Y-%m-%d'), sum(daywordarray)))
+        start.strftime('%Y-%m-%d'), sum(daywordarray)))
 
     g.close()
     h.close()
@@ -279,15 +253,33 @@ def updateModel(start, region):
 def preshift(start, region):
     labMT, labMTvector, labMTwordList = emotionFileReader(
         stopval=0.0, lang=region["lang"], returnVector=True)
-    numw = len(labMTvector)
 
-    # loop over time
-    currDay = copy.copy(start)
-
-    word_array = genfromtxt('word-vectors/{1}/{0}-sum.csv'.format(
-        currDay.strftime('%Y-%m-%d'), region["title"].lower()))
-    previous_word_array = genfromtxt(
-        'word-vectors/{1}/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d'), region["title"].lower()))
+    sumfile = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        start.strftime('%Y-%m-%d-sum.csv')
+    )
+    prevfile = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        start.strftime('%Y-%m-%d-prev7.csv')
+    )
+    shiftfile = os.path.join(
+        DATA_DIR,
+        'shifts',
+        region["title"].lower(),
+        start.strftime('%Y-%m-%d-shift.csv')
+    )
+    metashiftfile = os.path.join(
+        DATA_DIR,
+        'shifts',
+        region["title"].lower(),
+        start.strftime('%Y-%m-%d-metashift.csv')
+    )
+    word_array = genfromtxt(sumfile)
+    previous_word_array = genfromtxt(prevfile)
 
     # compute happiness of the word vectors
     word_array_stopped = stopper(
@@ -300,8 +292,7 @@ def preshift(start, region):
     [sortedMag, sortedWords, sortedType, sumTypes] = shift(
         previous_word_array_stopped, word_array_stopped, labMTvector, labMTwordList)
 
-    g = codecs.open('shifts/{1}/{0}-shift.csv'.format(
-        currDay.strftime('%Y-%m-%d'), region["title"].lower()), 'w', 'utf8')
+    g = codecs.open(shiftfile, 'w', 'utf8')
     g.write("mag,word,type")
     for i in xrange(10):
         g.write("\n")
@@ -312,72 +303,78 @@ def preshift(start, region):
         g.write(str(sortedType[i]))
     g.close()
 
-    g = open('shifts/{1}/{0}-metashift.csv'.format(
-        currDay.strftime('%Y-%m-%d'), region["title"].lower()), 'w')
+    g = open(metashiftfile, 'w')
     g.write("refH,compH,negdown,negup,posdown,posup")
     g.write("\n{0},{1},{2},{3},{4},{5}".format(prevhapps, happs,
                                                sumTypes[0], sumTypes[1], sumTypes[2], sumTypes[3]))
     g.close()
 
 
-def sort_sum_happs():
-    for region in REGIONS:
-        f = open(
-            '/usr/share/nginx/data/word-vectors/{0}/sumhapps.csv'.format(region["title"].lower()), 'r')
-        # skip the header
-        f.readline()
-        dates = []
-        happss = []
-        for line in f:
-            d, h = line.rstrip().split(',')
-            date = datetime.datetime.strptime(d, '%Y-%m-%d')
-            happs = float(h)
-            # make sure no duplicates
-            if not date in dates:
-                dates.append(date)
-                happss.append(happs)
-            # later dates take precendence
-            else:
-                happss[dates.index(date)] = happs
-        f.close()
-        # now sort
-        indexer = sorted(list(range(len(dates))), key=lambda k: dates[k])
-        dates_sorted = [dates[i] for i in indexer]
-        happss_sorted = [happss[i] for i in indexer]
-        f = open(
-            '/usr/share/nginx/data/word-vectors/{0}/sumhapps.csv'.format(region["title"].lower()), 'w')
-        f.write('date,value\n')
-        for d, h in zip(dates_sorted, happss_sorted):
-            f.write('{0},{1}\n'.format(d.strftime('%Y-%m-%d'), h))
-        f.close()
+def sort_sum_happs(region):
+    sumhapps = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        'sumhapps.csv'
+    )
+    sumfreq = os.path.join(
+        DATA_DIR,
+        'word-vectors',
+        region["title"].lower(),
+        'sumfreq.csv'
+    )
+    f = open(sumhapps, 'r')
+    # skip the header
+    f.readline()
+    dates = []
+    happss = []
+    for line in f:
+        d, h = line.rstrip().split(',')
+        date = datetime.datetime.strptime(d, '%Y-%m-%d')
+        happs = float(h)
+        # make sure no duplicates
+        if date not in dates:
+            dates.append(date)
+            happss.append(happs)
+        # later dates take precendence
+        else:
+            happss[dates.index(date)] = happs
+    f.close()
+    # now sort
+    indexer = sorted(list(range(len(dates))), key=lambda k: dates[k])
+    dates_sorted = [dates[i] for i in indexer]
+    happss_sorted = [happss[i] for i in indexer]
+    f = open(sumhapps, 'w')
+    f.write('date,value\n')
+    for d, h in zip(dates_sorted, happss_sorted):
+        f.write('{0},{1}\n'.format(d.strftime('%Y-%m-%d'), h))
+    f.close()
 
-        f = open(
-            '/usr/share/nginx/data/word-vectors/{0}/sumfreq.csv'.format(region["title"].lower()), 'r')
-        # skip the header
-        f.readline()
-        dates = []
-        freqs = []
-        for line in f:
-            tmp = line.rstrip().split(',')
-            if len(tmp) == 2:
-                d, fr = tmp
-                date = datetime.datetime.strptime(d, '%Y-%m-%d')
-                freq = float(fr)
-                # make sure no duplicates
-                if not date in dates:
-                    dates.append(date)
-                    freqs.append(freq)
-        f.close()
-        # now sort
-        indexer = sorted(list(range(len(dates))), key=lambda k: dates[k])
-        dates_sorted = [dates[i] for i in indexer]
-        freqs_sorted = [freqs[i] for i in indexer]
-        f = open(
-            '/usr/share/nginx/data/word-vectors/{0}/sumfreq.csv'.format(region["title"].lower()), 'w')
-        f.write('date,value\n')
-        for d, fr in zip(dates_sorted, freqs_sorted):
-            f.write('{0},{1:.0f}\n'.format(d.strftime('%Y-%m-%d'), fr))
-        f.close()
+    f = open(sumfreq, 'r')
+    # skip the header
+    f.readline()
+    dates = []
+    freqs = []
+    for line in f:
+        tmp = line.rstrip().split(',')
+        if len(tmp) == 2:
+            d, fr = tmp
+            date = datetime.datetime.strptime(d, '%Y-%m-%d')
+            freq = float(fr)
+            # make sure no duplicates
+            if date not in dates:
+                dates.append(date)
+                freqs.append(freq)
+    f.close()
+    # now sort
+    indexer = sorted(list(range(len(dates))), key=lambda k: dates[k])
+    dates_sorted = [dates[i] for i in indexer]
+    freqs_sorted = [freqs[i] for i in indexer]
+    f = open(sumfreq, 'w')
+    f.write('date,value\n')
+    for d, fr in zip(dates_sorted, freqs_sorted):
+        f.write('{0},{1:.0f}\n'.format(d.strftime('%Y-%m-%d'), fr))
+    f.close()
 
 
 def switch_delimiter(from_delim, to_delim, filename):
