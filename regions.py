@@ -27,31 +27,14 @@ from os import environ, mkdir
 from os.path import isdir, isfile
 
 from django.conf import settings
-from labMTsimple.storyLab import emotionFileReader, emotionV, stopper, shift
+from labMTsimple.storyLab import emotionFileReader, emotionV, shift, stopper
 from numpy import float, genfromtxt, zeros
-
-sys.path.append('/home/prod/app')
-environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
 
 from hedonometer.models import Timeseries
 
-# regions = [["France","79","french",],["Germany","86","german",],["England","239","english",],["Spain","213","spanish",],["Brazil","32","portuguese",],["Mexico","145","spanish",],["South-Korea","211","korean",],["Egypt","69","arabic",],["Australia","14","english",],["New-Zealand","160","english",],["Canada","41","english",],["Canada-fr","41","french",],]
-
-regions = [{'id': '79', 'lang': 'french', 'title': 'France', 'type': 'region'},
-           {'id': '86', 'lang': 'german', 'title': 'Germany', 'type': 'region'},
-           {'id': '239', 'lang': 'english', 'title': 'England', 'type': 'region'},
-           {'id': '213', 'lang': 'spanish', 'title': 'Spain', 'type': 'region'},
-           {'id': '32', 'lang': 'portuguese', 'title': 'Brazil', 'type': 'region'},
-           {'id': '145', 'lang': 'spanish', 'title': 'Mexico', 'type': 'region'},
-           {'id': '211', 'lang': 'korean', 'title': 'South-Korea', 'type': 'region'},
-           {'id': '69', 'lang': 'arabic', 'title': 'Egypt', 'type': 'region'},
-           {'id': '14', 'lang': 'english', 'title': 'Australia', 'type': 'region'},
-           {'id': '160', 'lang': 'english', 'title': 'New-Zealand', 'type': 'region'},
-           {'id': '41', 'lang': 'english', 'title': 'Canada', 'type': 'region'},
-           {'id': '41', 'lang': 'french', 'title': 'Canada-fr', 'type': 'region'},
-           {'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
-
-regions = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
+REGIONS = [{'id': '0', 'lang': 'english', 'title': 'VACC', 'type': 'main'}]
+DATA_DIR = "/usr/share/nginx/data"
+SOURCE_DIR = '/users/j/m/jminot/scratch/labmt/storywrangler_en'
 
 with open("stopwords.csv", "r") as f:
     IGNORE = f.read().split("\n")
@@ -59,25 +42,18 @@ with open("stopwords.csv", "r") as f:
 
 def processregion(region, date):
     # check the day file is there
-    if not isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d'))):
-        # if True:
-        if region["type"] == "region":
-            print("proccessing {0}".format(region["title"]))
-            rsync(region, date)
-        elif region["type"] == "main":
-            print("proccessing main {0}".format(region["title"]))
-            rsync_main(region, date)
-            # add_main(date,date+datetime.timedelta(days=1),region)
-        else:
-            print("unknown region type {0}".format(region["type"]))
+    if not isfile(os.path.join(DATA_DIR, 'word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d')))):
+        print("proccessing main {0}".format(region["title"]))
+        rsync_main(region, date)
+        # add_main(date,date+datetime.timedelta(days=1),region)
 
-        if isfile('/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d'))):
+        if isfile(os.path.join(DATA_DIR, 'word-vectors/{0}/{1}-sum.csv'.format(region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d')))):
 
             print("found sum file, doing stuff")
 
             # first time this file moved over here, check the format
-            switch_delimiter(',', '\n', '/usr/share/nginx/data/word-vectors/{0}/{1}-sum.csv'.format(
-                region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d')))
+            switch_delimiter(',', '\n', os.path.join(DATA_DIR, 'word-vectors/{0}/{1}-sum.csv'.format(
+                region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d'))))
 
             # add up the previous vectors
             rest('prevvectors', date, date, region)
@@ -95,14 +71,11 @@ def processregion(region, date):
 
 
 def allregions(date):
-    for region in regions:
-        print "processing region {0} on {1}".format(
-            region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d'))
-        # try:
+    for region in REGIONS:
+        print("processing region {0} on {1}".format(
+            region["title"].lower(), datetime.datetime.strftime(date, '%Y-%m-%d')))
         processregion(region, date)
-        print "success"
-        # except:
-        #     print "failed"
+        print("success")
 
 
 def loopdates(startdate, enddate):
@@ -112,43 +85,26 @@ def loopdates(startdate, enddate):
 
 
 def rsync_main(region, date):
-    if not isdir('/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower())):
+    if not isdir(os.path.join(DATA_DIR, 'word-vectors/{0}'.format(region["title"].lower())):
         mkdir(
-            '/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower()))
-    DIR = '/users/j/m/jminot/scratch/labmt/storywrangler_en'
+            os.path.join(DATA_DIR, 'word-vectors/{0}'.format(region["title"].lower())))
+
     subprocess.call("rsync -avzr vacc2:{2}/{0}.txt word-vectors/{1}/{0}-sum.csv".format(
-        date.strftime('%Y-%m-%d'), region["title"].lower(), DIR), shell=True)
-
-
-def rsync(region, date):
-    # print "trying to get the file"
-    if isdir('/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower())):
-        # try to get the file
-        subprocess.call("rsync -avzr --ignore-existing vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/word-vectors/{1}-{0}-word-vector.csv /usr/share/nginx/data/word-vectors/{2}/{1}-sum.csv".format(
-            region["title"], datetime.datetime.strftime(date, '%Y-%m-%d'), region["title"].lower()), shell=True)
-    else:
-        mkdir(
-            '/usr/share/nginx/data/word-vectors/{0}'.format(region["title"].lower()))
-        subprocess.call("rsync -avzr --ignore-existing vacc1:/users/a/r/areagan/fun/twitter/jake/pullTweets/word-vectors/{1}-{0}-word-vector.csv /usr/share/nginx/data/word-vectors/{2}/{1}-sum.csv".format(
-            region["title"], datetime.datetime.strftime(date, '%Y-%m-%d'), region["title"].lower()), shell=True).communicate()
+        date.strftime('%Y-%m-%d'), region["title"].lower(), SOURCE_DIR), shell=True)
 
 
 def sumfiles(start, end, wordvec, title, numw):
     curr = copy.copy(start)
     while curr <= end:
-        # print "adding {0}".format(curr.strftime('%Y-%m-%d'))
         try:
             switch_delimiter(
                 ',', '\n', 'word-vectors/{1}/{0}-sum.csv'.format(curr.strftime('%Y-%m-%d'), title))
             a = genfromtxt(
                 'word-vectors/{1}/{0}-sum.csv'.format(curr.strftime('%Y-%m-%d'), title), dtype=float)
-            wordvec = wordvec+a
+            wordvec = wordvec + a
         except:
-            # print "could not load {0}".format(curr.strftime('%Y-%m-%d'))
-            print 'could not load word-vectors/{1}/{0}-sum.csv'.format(
-                curr.strftime('%Y-%m-%d'), title)
-            # raise
-            # pass
+            print('could not load word-vectors/{1}/{0}-sum.csv'.format(
+                curr.strftime('%Y-%m-%d'), title))
         curr += datetime.timedelta(days=1)
 
     return wordvec, curr
@@ -210,12 +166,12 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
             stopval=0.0, lang=region["lang"], returnVector=True)
         numw = len(labMTvector)
 
-        maincurr = copy.copy(start+datetime.timedelta(days=-1))
+        maincurr = copy.copy(start + datetime.timedelta(days=-1))
         while maincurr < end:
             wordvec = zeros(numw)
             # added the try loop to handle failure inside the sumfiles
             # try:
-            [total, date] = sumfiles(maincurr+datetime.timedelta(days=-6), maincurr +
+            [total, date] = sumfiles(maincurr + datetime.timedelta(days=-6), maincurr +
                                      datetime.timedelta(days=0), wordvec, region["title"].lower(), numw)
 
             # if it's empty, add the word "happy"
@@ -223,14 +179,10 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
                 total[3] = 1
 
             # write the total into a file for date
-            # print "printing to {0}-prev7.csv".format(date.strftime('%Y-%m-%d'))
             f = open('word-vectors/{1}/{0}-prev7.csv'.format(
                 date.strftime('%Y-%m-%d'), region["title"].lower()), 'w')
             f.write('\n'.join(['{0:.0f}'.format(x) for x in total]))
             f.close()
-            # except:
-            #     print "failed on {0}".format(date.strftime('%Y-%m-%d'))
-            #     print "-------------------------------"
             maincurr += datetime.timedelta(days=1)
 
     if option == 'range':
@@ -244,16 +196,11 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
             start, end, wordvec, region["title"].lower(), numw)
 
         # write the total into a file for date
-        # print "printing to {0}".format(date.strftime('%Y-%m-%d'))
         f = open(outfile, 'w')
         f.write('\n'.join(['{0:.0f}'.format(x) for x in total]))
         f.close()
-        # except:
-        #     print "failed on {0}".format(date.strftime('%Y-%m-%d'))
-        #     print "-------------------------------"
 
     if option == 'list':
-        # print "heads up, the second word after list needs to be the language"
         labMT, labMTvector, labMTwordList = emotionFileReader(
             stopval=0.0, lang=region["lang"], returnVector=True)
         numw = len(labMTvector)
@@ -266,7 +213,6 @@ def rest(option, start, end, region, outfile='test.csv', days=[]):
             wordvec += tmp
 
         # write the total into a file for date
-        # print "printing to {0}".format(outfile)
         f = open(outfile, 'w')
         f.write('\n'.join(['{0:.0f}'.format(x) for x in wordvec]))
         f.close()
@@ -277,11 +223,10 @@ def timeseries(start, region, useStopWindow=True):
         stopval=0.0, lang=region["lang"], returnVector=True)
     numw = len(labMTvector)
 
-    # print "opening in append mode"
     g = codecs.open('word-vectors/' +
-                    region["title"].lower()+'/sumhapps.csv', 'a', 'utf8')
+                    region["title"].lower() + '/sumhapps.csv', 'a', 'utf8')
     h = codecs.open('word-vectors/' +
-                    region["title"].lower()+'/sumfreq.csv', 'a', 'utf8')
+                    region["title"].lower() + '/sumfreq.csv', 'a', 'utf8')
 
     # loop over time
     currDay = copy.copy(start)
@@ -292,21 +237,14 @@ def timeseries(start, region, useStopWindow=True):
     wordarray = [zeros(numw) for i in xrange(24)]
     daywordarray = zeros(numw)
 
-    # print 'reading word-vectors/'+region["title"].lower()+'/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'))
+    daywordarray = genfromtxt('word-vectors/' + region["title"].lower(
+    ) + '/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')), dtype=float)
 
-    daywordarray = genfromtxt('word-vectors/'+region["title"].lower(
-    )+'/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')), dtype=float)
-
-    # # try
-    # f = codecs.open('word-vectors/'+region["title"].lower()+'/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d')),'r','utf8')
-    # daywordarray = array(map(float,f.read().split(',')[0:numw]))
-    # f.close()
-    # # print daywordarray
-    # # print len(daywordarray)
     # compute happiness of the word vectors
     if useStopWindow:
-        stoppedVec = stopper(daywordarray, labMTvector, labMTwordList, ignore=IGNORE)
-                             
+        stoppedVec = stopper(daywordarray, labMTvector,
+                             labMTwordList, ignore=IGNORE)
+
         happs = emotionV(stoppedVec, labMTvector)
     else:
         happs = emotionV(daywordarray, labMTvector)
@@ -314,7 +252,6 @@ def timeseries(start, region, useStopWindow=True):
 
     if dayhappsarray[0] > 0:
         # write out the day happs
-        # print 'writing word-vectors/{1}/{0}-happs'.format(currDay.strftime('%Y-%m-%d'),region["title"].lower())
         f = codecs.open('word-vectors/{1}/{0}-happs.csv'.format(
             currDay.strftime('%Y-%m-%d'), region["title"].lower()), 'w', 'utf8')
         f.write('{0}'.format(dayhappsarray[0]))
@@ -347,43 +284,22 @@ def preshift(start, region):
     # loop over time
     currDay = copy.copy(start)
 
-    # # empty array
-    # wordarray = zeros(numw)
-    # prevwordarray = zeros(numw)
-
-    # # print 'reading word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-sum.csv'),region["title"].lower())
-    # f = codecs.open('word-vectors/{1}/{0}-sum.csv'.format(currDay.strftime('%Y-%m-%d'),region["title"].lower()),'r','utf8')
-    # wordarray = array(map(float,f.read().split(',')[0:numw]))
-    # f.close()
-
-    # # print 'reading word-vectors/{1}/{0}'.format(currDay.strftime('%Y-%m-%d-prev7.csv'),region["title"].lower())
-    # f = codecs.open('word-vectors/{1}/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d'),region["title"].lower()),'r','utf8')
-    # prevwordarray = array(map(float,f.read().split(',')[0:numw]))
-    # f.close()
-    # # print daywordarray
-    # # print len(wordarray)
-    # # print len(prevwordarray)
-
     word_array = genfromtxt('word-vectors/{1}/{0}-sum.csv'.format(
         currDay.strftime('%Y-%m-%d'), region["title"].lower()))
     previous_word_array = genfromtxt(
         'word-vectors/{1}/{0}-prev7.csv'.format(currDay.strftime('%Y-%m-%d'), region["title"].lower()))
 
     # compute happiness of the word vectors
-    word_array_stopped = stopper(word_array, labMTvector, labMTwordList, ignore=IGNORE)
-    previous_word_array_stopped = stopper(previous_word_array, labMTvector, labMTwordList, ignore=IGNORE)
+    word_array_stopped = stopper(
+        word_array, labMTvector, labMTwordList, ignore=IGNORE)
+    previous_word_array_stopped = stopper(
+        previous_word_array, labMTvector, labMTwordList, ignore=IGNORE)
     happs = emotionV(word_array_stopped, labMTvector)
     prevhapps = emotionV(previous_word_array_stopped, labMTvector)
-    # print happs
 
     [sortedMag, sortedWords, sortedType, sumTypes] = shift(
         previous_word_array_stopped, word_array_stopped, labMTvector, labMTwordList)
-    # print sortedMag[:10]
-    # print sortedWords[:10]
-    # print sortedType[:10]
-    # print sumTypes
 
-    # print 'writing shifts/{1}/{0}-shift.csv'.format(currDay.strftime('%Y-%m-%d'),region["title"].lower())
     g = codecs.open('shifts/{1}/{0}-shift.csv'.format(
         currDay.strftime('%Y-%m-%d'), region["title"].lower()), 'w', 'utf8')
     g.write("mag,word,type")
@@ -396,7 +312,6 @@ def preshift(start, region):
         g.write(str(sortedType[i]))
     g.close()
 
-    # print 'writing shifts/{1}/{0}-metashift.csv'.format(currDay.strftime('%Y-%m-%d'),region["title"].lower())
     g = open('shifts/{1}/{0}-metashift.csv'.format(
         currDay.strftime('%Y-%m-%d'), region["title"].lower()), 'w')
     g.write("refH,compH,negdown,negup,posdown,posup")
@@ -405,26 +320,8 @@ def preshift(start, region):
     g.close()
 
 
-def makeshiftdirectories():
-    for region in regions:
-        mkdir(
-            '/usr/share/nginx/data/shifts/{0}'.format(region["title"].lower()))
-
-
-def emptysumhapps():
-    for region in regions:
-        f = open(
-            '/usr/share/nginx/data/word-vectors/{0}/sumhapps.csv'.format(region["title"].lower()), 'w')
-        f.write('date,value\n')
-        f.close()
-        f = open(
-            '/usr/share/nginx/data/word-vectors/{0}/sumfreq.csv'.format(region["title"].lower()), 'w')
-        f.write('date,value\n')
-        f.close()
-
-
 def sort_sum_happs():
-    for region in regions:
+    for region in REGIONS:
         f = open(
             '/usr/share/nginx/data/word-vectors/{0}/sumhapps.csv'.format(region["title"].lower()), 'r')
         # skip the header
@@ -498,19 +395,7 @@ def switch_delimiter(from_delim, to_delim, filename):
         f.close()
 
 
-def printlinks():
-    for region in regions:
-        print 'http://hedonometer.org/{0}/'.format(region["title"].lower())
-
-
 if __name__ == '__main__':
-
-    # makeshiftdirectories()
-
-    # emptysumhapps()
-
-    # printlinks()
-
     # do the rsync
     # start = datetime.datetime(2014,4,15)
     # start = datetime.datetime(2015,2,9)
@@ -521,6 +406,6 @@ if __name__ == '__main__':
                               seconds=end.second, microseconds=end.microsecond)
     start = end - datetime.timedelta(days=40)
     # start = datetime.datetime(2008, 9, 9)
-    # start = datetime.datetime(2010,1,1)
+    # start = datetime.datetime(2010, 1, 1)
 
     loopdates(start, end)
