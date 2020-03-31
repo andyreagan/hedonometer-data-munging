@@ -40,7 +40,7 @@ def processregion(region, date):
     # check the day file is there
     sumfile = os.path.join(DATA_DIR, region.directory, region.wordVecDir, datetime.datetime.strftime(date, '%Y-%m-%d-sum.csv'))
     if not isfile(sumfile):
-        print("proccessing {0} for {1}".format(region["title"].lower(), sumfile))
+        print("proccessing {0} for {1}".format(region.title, sumfile))
         rsync_main(region, date)
 
         if isfile(sumfile):
@@ -56,7 +56,7 @@ def processregion(region, date):
 
             preshift(date, region)
 
-            updateModel(date, region)
+            # updateModel(date, region)
 
             sort_sum_happs(region)
 
@@ -239,7 +239,7 @@ def timeseries(start, region, useStopWindow=True):
 
 def updateModel(start, region):
     # go get the database model
-    t = Timeseries.objects.get(title=region["title"])
+    t = Timeseries.objects.get(title=region.title)
     t.endDate = start
     t.save()
 
