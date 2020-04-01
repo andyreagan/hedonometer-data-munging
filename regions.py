@@ -342,7 +342,7 @@ def loopdates(startdate, enddate):
                 datetime.datetime.strftime(startdate, '%Y-%m-%d'))
             )
             with open(os.path.join(DATA_DIR, region.directory, region.scoreList), 'r') as f:
-                labMTvector = f.read().strip().split('\n')
+                labMTvector = list(map(float,f.read().strip().split('\n')))
             with open(os.path.join(DATA_DIR, region.directory, region.wordList), 'r') as f:
                 labMTwordList = f.read().strip().split('\n')
             numw = len(labMTvector)
