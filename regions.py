@@ -164,8 +164,8 @@ def timeseries(date, region, word_list, score_list, useStopWindow=True):
 
     # compute happiness of the word vectors
     if useStopWindow:
-        stoppedVec = stopper(daywordarray, score_list,
-                             word_list, ignore=IGNORE)
+        stoppedVec = stopper(tmpVec=daywordarray, score_list=score_list,
+                             word_list=word_list, ignore=IGNORE)
 
         happs = emotionV(stoppedVec, score_list)
     else:
@@ -223,9 +223,13 @@ def preshift(start, region, word_list, score_list):
 
     # compute happiness of the word vectors
     word_array_stopped = stopper(
-        word_array, score_list, word_list, ignore=IGNORE)
+        tmpVec=word_array, score_list=score_list,
+        word_list=word_list, ignore=IGNORE
+    )
     previous_word_array_stopped = stopper(
-        previous_word_array, score_list, word_list, ignore=IGNORE)
+        tmpVec=previous_word_array, score_list=score_list,
+        word_list=word_list, ignore=IGNORE
+    )
     happs = emotionV(word_array_stopped, score_list)
     prevhapps = emotionV(previous_word_array_stopped, score_list)
 
@@ -357,9 +361,9 @@ def loopdates(startdate, enddate):
                     # add up the previous vectors
                     rest('prevvectors', startdate, startdate, region, numw)
 
-                    timeseries(startdate, region, labMTwordList, labMTvector, useStopWindow=True)
+                    timeseries(startdate, region, word_list=labMTwordList, score_list=labMTvector, useStopWindow=True)
 
-                    preshift(startdate, region, labMTwordList, labMTvector)
+                    preshift(startdate, region, word_list=labMTwordList, score_list=labMTvector)
 
                     # updateModel(startdate, region)
 
