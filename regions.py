@@ -51,7 +51,14 @@ def rsync_main(region, date):
     subprocess.call(command,shell=True)
 
 
-def sumfiles(start, end, wordvec, title, numw):
+def sumfiles(start, end, wordvec, title):
+    '''start: start date
+    end: end date
+    wordvec: numpy array
+    title: folder to load from
+
+    loads each file, inclusive of the start and end'''
+
     curr = copy.copy(start)
     while curr <= end:
         sumfile = os.path.join(
@@ -59,76 +66,50 @@ def sumfiles(start, end, wordvec, title, numw):
             title,
             curr.strftime('%Y-%m-%d-sum.csv')
         )
-        try:
-            switch_delimiter(',', '\n', sumfile)
+        if os.path.isfile(sumfile):
+            # switch_delimiter(',', '\n', sumfile)
             a = genfromtxt(sumfile, dtype=float)
             wordvec = wordvec + a
-        except:
-            print('could not load {0}'.format(sumfile))
         curr += datetime.timedelta(days=1)
 
-    return wordvec, curr
+    return wordvec
 
 
-def rest(option, start, end, region, numw, outfile='test.csv', days=[]):
+def rest(start, end, region, numw, outfile='test.csv', days=[]):
     '''This reads word vector files from disk and writes them to an output file.
 
     If the option is 'range', pass it an outfile to write to
     If the option is 'list', pass it an outfile and days list
 
-    option: one of ['prevvectors', 'range', 'list']
     start: start date, datetime.date
     end: end date, datetime.date
     region: the Timeseries object
     outfile: the file to write to
     days: list of files to add
     '''
-    if option == 'prevvectors':
-        maincurr = copy.copy(start + datetime.timedelta(days=-1))
-        while maincurr < end:
-            wordvec = zeros(numw)
-            # added the try loop to handle failure inside the sumfiles
-            # try:
-            [total, date] = sumfiles(maincurr + datetime.timedelta(days=-6), maincurr +
-                                     datetime.timedelta(days=0), wordvec, os.path.join(region.directory, region.wordVecDir), numw)
+    maincurr = copy.copy(start + datetime.timedelta(days=-1))
+    while maincurr < end:
+        # added the try loop to handle failure inside the sumfiles
+        # try:
+        total = sumfiles(maincurr + datetime.timedelta(days=-6),
+                         maincurr + datetime.timedelta(days=0),
+                         zeros(numw),
+                         os.path.join(region.directory, region.wordVecDir))
 
-            # if it's empty, add the word "happy"
-            if sum(total) == 0:
-                total[3] = 1
-            sumfile = os.path.join(
-                DATA_DIR,
-                region.directory,
-                region.wordVecDir,
-                date.strftime('%Y-%m-%d-prev7.csv')
-            )
-            # write the total into a file for date
-            f = open(sumfile, 'w')
+        # if it's empty, add the word "happy"
+        # if sum(total) == 0:
+        #     total[3] = 1
+        sumfile = os.path.join(
+            DATA_DIR,
+            region.directory,
+            region.wordVecDir,
+            date.strftime('%Y-%m-%d-prev7.csv')
+        )
+        # write the total into a file for date
+        with open(sumfile, 'w') as f:
             f.write('\n'.join(['{0:.0f}'.format(x) for x in total]))
-            f.close()
-            maincurr += datetime.timedelta(days=1)
 
-    if option == 'range':
-        wordvec = zeros(numw)
-
-        [total, date] = sumfiles(
-            start, end, wordvec, os.path.join(region.directory, region.wordVecDir), numw)
-
-        # write the total into a file for date
-        f = open(outfile, 'w')
-        f.write('\n'.join(['{0:.0f}'.format(x) for x in total]))
-        f.close()
-
-    if option == 'list':
-        for day in days:
-            # this should handle the array object by reference
-            [tmp, date] = sumfiles(
-                day, day, wordvec, os.path.join(region.directory, region.wordVecDir), numw)
-            wordvec += tmp
-
-        # write the total into a file for date
-        f = open(outfile, 'w')
-        f.write('\n'.join(['{0:.0f}'.format(x) for x in wordvec]))
-        f.close()
+        maincurr += datetime.timedelta(days=1)
 
 
 def timeseries(date, region, word_list, score_list, useStopWindow=True):
@@ -344,8 +325,12 @@ def loopdates(startdate, enddate):
             )
             with open(os.path.join(DATA_DIR, region.directory, region.scoreList), 'r') as f:
                 labMTvector = list(map(float,f.read().strip().split('\n')))
+            print(len(labMTvector))
             with open(os.path.join(DATA_DIR, region.directory, region.wordList), 'r') as f:
                 labMTwordList = f.read().strip().split('\n')
+            print(len(labMTwordList))
+
+            assert len(labMTvector) == len(labMTwordList)
             numw = len(labMTvector)
 
             sumfile = os.path.join(DATA_DIR, region.directory, region.wordVecDir, datetime.datetime.strftime(currdate, '%Y-%m-%d-sum.csv'))
@@ -360,7 +345,7 @@ def loopdates(startdate, enddate):
                     switch_delimiter(',', '\n', sumfile)
 
                     # add up the previous vectors
-                    rest('prevvectors', currdate, currdate, region, numw)
+                    rest(currdate, currdate, region, numw)
 
                     timeseries(currdate, region, word_list=labMTwordList, score_list=labMTvector, useStopWindow=True)
 
