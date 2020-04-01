@@ -28,7 +28,7 @@ from os.path import isdir, isfile
 
 import click
 from labMTsimple.storyLab import emotionFileReader, emotionV, shift, stopper
-from numpy import float, genfromtxt, zeros
+from numpy import float, genfromtxt, zeros, array, sum
 
 from hedonometer.models import Timeseries
 
@@ -68,7 +68,12 @@ def sumfiles(start, end, wordvec, title):
         )
         if os.path.isfile(sumfile):
             # switch_delimiter(',', '\n', sumfile)
-            a = genfromtxt(sumfile, dtype=float)
+            with open(sumfile, 'r') as f:
+                a = array(list(map(float, f.read().strip().split())))
+            if len(a) != len(wordvec):
+                print(len(a))
+                print(len(wordvec))
+            assert len(a) == len(wordvec)
             wordvec = wordvec + a
         curr += datetime.timedelta(days=1)
 
@@ -141,7 +146,8 @@ def timeseries(date, region, word_list, score_list, useStopWindow=True):
     dayhappsarray = zeros(1)
     daywordarray = zeros(len(word_list))
 
-    daywordarray = genfromtxt(sumfile, dtype=float)
+    with open(sumfile, 'r') as f:
+        daywordarray = array(list(map(float, f.read().strip().split())))
 
     # compute happiness of the word vectors
     if useStopWindow:
@@ -199,8 +205,10 @@ def preshift(start, region, word_list, score_list):
         region.directory, region.shiftDir,
         start.strftime('%Y-%m-%d-metashift.csv')
     )
-    word_array = genfromtxt(sumfile)
-    previous_word_array = genfromtxt(prevfile)
+    with open(sumfile, 'r') as f:
+        word_array = array(list(map(float, f.read().strip().split())))
+    with open(prevfile, 'r') as f:
+        previous_word_array = array(list(map(float, f.read().strip().split())))
 
     # compute happiness of the word vectors
     word_array_stopped = stopper(
@@ -212,10 +220,16 @@ def preshift(start, region, word_list, score_list):
         word_list=word_list, ignore=IGNORE
     )
     happs = emotionV(word_array_stopped, score_list)
-    prevhapps = emotionV(previous_word_array_stopped, score_list)
-
-    [sortedMag, sortedWords, sortedType, sumTypes] = shift(
-        previous_word_array_stopped, word_array_stopped, score_list, word_list)
+    if sum(previous_word_array_stopped) == 0:
+        prevhapps = 0
+        sortedMag = 0
+        sortedWords = 0
+        sortedType = 0
+        sumTypes = [0, 0, 0, 0]
+    else:
+        prevhapps = emotionV(previous_word_array_stopped, score_list)
+        [sortedMag, sortedWords, sortedType, sumTypes] = shift(
+            previous_word_array_stopped, word_array_stopped, score_list, word_list)
 
     g = codecs.open(shiftfile, 'w', 'utf8')
     g.write("mag,word,type")
