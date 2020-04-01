@@ -335,11 +335,12 @@ def switch_delimiter(from_delim, to_delim, filename):
 
 
 def loopdates(startdate, enddate):
-    while startdate <= enddate:
-        for region in Timeseries.objects.all():
+    for region in Timeseries.objects.all():
+        currdate = copy.copy(startdate)
+        while currdate <= enddate:
             print("processing region {0} on {1}".format(
                 region.title,
-                datetime.datetime.strftime(startdate, '%Y-%m-%d'))
+                datetime.datetime.strftime(currdate, '%Y-%m-%d'))
             )
             with open(os.path.join(DATA_DIR, region.directory, region.scoreList), 'r') as f:
                 labMTvector = list(map(float,f.read().strip().split('\n')))
@@ -347,10 +348,10 @@ def loopdates(startdate, enddate):
                 labMTwordList = f.read().strip().split('\n')
             numw = len(labMTvector)
 
-            sumfile = os.path.join(DATA_DIR, region.directory, region.wordVecDir, datetime.datetime.strftime(startdate, '%Y-%m-%d-sum.csv'))
+            sumfile = os.path.join(DATA_DIR, region.directory, region.wordVecDir, datetime.datetime.strftime(currdate, '%Y-%m-%d-sum.csv'))
             if not isfile(sumfile):
                 print("proccessing {0} for {1}".format(region.title, sumfile))
-                rsync_main(region, startdate)
+                rsync_main(region, currdate)
 
                 if isfile(sumfile):
                     print("found sum file, doing stuff")
@@ -359,17 +360,17 @@ def loopdates(startdate, enddate):
                     switch_delimiter(',', '\n', sumfile)
 
                     # add up the previous vectors
-                    rest('prevvectors', startdate, startdate, region, numw)
+                    rest('prevvectors', currdate, currdate, region, numw)
 
-                    timeseries(startdate, region, word_list=labMTwordList, score_list=labMTvector, useStopWindow=True)
+                    timeseries(currdate, region, word_list=labMTwordList, score_list=labMTvector, useStopWindow=True)
 
-                    preshift(startdate, region, word_list=labMTwordList, score_list=labMTvector)
+                    preshift(currdate, region, word_list=labMTwordList, score_list=labMTvector)
 
-                    # updateModel(startdate, region)
+                    # updateModel(currdate, region)
 
                     sort_sum_happs(region)
                     print("success")
-        startdate += datetime.timedelta(days=1)
+            currdate += datetime.timedelta(days=1)
 
 
 @click.command()
