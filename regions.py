@@ -380,17 +380,23 @@ def switch_delimiter(from_delim, to_delim, filename):
         f.close()
 
 
-if __name__ == '__main__':
-    # do the rsync
-    # start = datetime.datetime(2014,4,15)
-    # start = datetime.datetime(2015,2,9)
-    # start = datetime.datetime(2015,5,27)
-    # end = datetime.datetime(2015,5,27)
+@click.command()
+@click.option('--days-back', default=None)
+@click.option('--start-date', default=None)
+def main(days_back, start_date):
     end = datetime.datetime.now()
     end -= datetime.timedelta(hours=end.hour, minutes=end.minute,
                               seconds=end.second, microseconds=end.microsecond)
-    start = end - datetime.timedelta(days=40)
-    # start = datetime.datetime(2008, 9, 9)
-    # start = datetime.datetime(2010, 1, 1)
+
+    if start_date is None and days_back is None:
+        raise("Need at least some date to start from")
+    if start_date is not None:
+        start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    else:
+        start = end - datetime.timedelta(days=int(days_back))
 
     loopdates(start, end)
+
+if __name__ == '__main__':
+    main()
+
