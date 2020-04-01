@@ -335,7 +335,7 @@ def loopdates(startdate, enddate):
         for region in Timeseries.objects.all():
             print("processing region {0} on {1}".format(
                 region.title,
-                datetime.datetime.strftime(date, '%Y-%m-%d'))
+                datetime.datetime.strftime(startdate, '%Y-%m-%d'))
             )
             with open(os.path.join(DATA_DIR, region.directory, region.scoreList), 'r') as f:
                 labMTvector = f.read().strip().split('\n')
@@ -343,10 +343,10 @@ def loopdates(startdate, enddate):
                 labMTwordList = f.read().strip().split('\n')
             numw = len(labMTvector)
 
-            sumfile = os.path.join(DATA_DIR, region.directory, region.wordVecDir, datetime.datetime.strftime(date, '%Y-%m-%d-sum.csv'))
+            sumfile = os.path.join(DATA_DIR, region.directory, region.wordVecDir, datetime.datetime.strftime(startdate, '%Y-%m-%d-sum.csv'))
             if not isfile(sumfile):
                 print("proccessing {0} for {1}".format(region.title, sumfile))
-                rsync_main(region, date)
+                rsync_main(region, startdate)
 
                 if isfile(sumfile):
                     print("found sum file, doing stuff")
@@ -355,13 +355,13 @@ def loopdates(startdate, enddate):
                     switch_delimiter(',', '\n', sumfile)
 
                     # add up the previous vectors
-                    rest('prevvectors', date, date, region, numw)
+                    rest('prevvectors', startdate, startdate, region, numw)
 
-                    timeseries(date, region, labMTwordList, labMTvector, useStopWindow=True)
+                    timeseries(startdate, region, labMTwordList, labMTvector, useStopWindow=True)
 
-                    preshift(date, region, labMTwordList, labMTvector)
+                    preshift(startdate, region, labMTwordList, labMTvector)
 
-                    # updateModel(date, region)
+                    # updateModel(startdate, region)
 
                     sort_sum_happs(region)
                     print("success")
