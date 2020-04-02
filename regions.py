@@ -27,8 +27,8 @@ from os import mkdir
 from os.path import isdir, isfile
 
 import click
-from labMTsimple.storyLab import emotionFileReader, emotionV, shift, stopper
-from numpy import float, genfromtxt, zeros, array, sum
+from labMTsimple.storyLab import emotionV, shift, stopper
+from numpy import float, zeros, array, sum
 
 from hedonometer.models import Timeseries
 
@@ -80,7 +80,7 @@ def sumfiles(start, end, wordvec, title):
     return wordvec
 
 
-def rest(start, end, region, numw, outfile='test.csv', days=[]):
+def rest(start, region, numw, outfile='test.csv', days=[]):
     '''This reads word vector files from disk and writes them to an output file.
 
     If the option is 'range', pass it an outfile to write to
@@ -92,29 +92,24 @@ def rest(start, end, region, numw, outfile='test.csv', days=[]):
     outfile: the file to write to
     days: list of files to add
     '''
-    maincurr = copy.copy(start + datetime.timedelta(days=-1))
-    while maincurr < end:
-        # added the try loop to handle failure inside the sumfiles
-        # try:
-        total = sumfiles(maincurr + datetime.timedelta(days=-6),
-                         maincurr + datetime.timedelta(days=0),
-                         zeros(numw),
-                         os.path.join(region.directory, region.wordVecDir))
 
-        # if it's empty, add the word "happy"
-        # if sum(total) == 0:
-        #     total[3] = 1
-        sumfile = os.path.join(
-            DATA_DIR,
-            region.directory,
-            region.wordVecDir,
-            date.strftime('%Y-%m-%d-prev7.csv')
-        )
-        # write the total into a file for date
-        with open(sumfile, 'w') as f:
-            f.write('\n'.join(['{0:.0f}'.format(x) for x in total]))
+    total = sumfiles(start + datetime.timedelta(days=-7),
+                     start + datetime.timedelta(days=-1),
+                     zeros(numw),
+                     os.path.join(region.directory, region.wordVecDir))
 
-        maincurr += datetime.timedelta(days=1)
+    # if it's empty, add the word "happy"
+    # if sum(total) == 0:
+    #     total[3] = 1
+    sumfile = os.path.join(
+        DATA_DIR,
+        region.directory,
+        region.wordVecDir,
+        start.strftime('%Y-%m-%d-prev7.csv')
+    )
+    # write the total into a file for date
+    with open(sumfile, 'w') as f:
+        f.write('\n'.join(['{0:.0f}'.format(x) for x in total]))
 
 
 def timeseries(date, region, word_list, score_list, useStopWindow=True):
@@ -359,7 +354,7 @@ def loopdates(startdate, enddate):
                     switch_delimiter(',', '\n', sumfile)
 
                     # add up the previous vectors
-                    rest(currdate, currdate, region, numw)
+                    rest(currdate, region, numw)
 
                     timeseries(currdate, region, word_list=labMTwordList, score_list=labMTvector, useStopWindow=True)
 
