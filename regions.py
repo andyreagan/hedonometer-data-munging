@@ -60,6 +60,7 @@ def sumfiles(start, end, wordvec, title):
     loads each file, inclusive of the start and end'''
 
     curr = copy.copy(start)
+    files = {}
     while curr <= end:
         sumfile = os.path.join(
             DATA_DIR,
@@ -75,9 +76,10 @@ def sumfiles(start, end, wordvec, title):
                 print(len(wordvec))
             assert len(a) == len(wordvec)
             wordvec = wordvec + a
+            files[curr] = a
         curr += datetime.timedelta(days=1)
 
-    return wordvec
+    return wordvec, files
 
 
 def rest(start, region, numw, outfile='test.csv', days=[]):
@@ -93,10 +95,10 @@ def rest(start, region, numw, outfile='test.csv', days=[]):
     days: list of files to add
     '''
 
-    total = sumfiles(start + datetime.timedelta(days=-7),
-                     start + datetime.timedelta(days=-1),
-                     zeros(numw),
-                     os.path.join(region.directory, region.wordVecDir))
+    total, wordvecs = sumfiles(start + datetime.timedelta(days=-7),
+                               start + datetime.timedelta(days=-1),
+                               zeros(numw),
+                               os.path.join(region.directory, region.wordVecDir))
 
     # if it's empty, add the word "happy"
     # if sum(total) == 0:
@@ -361,10 +363,10 @@ def loopdates(startdate, enddate):
                     preshift(currdate, region, word_list=labMTwordList, score_list=labMTvector)
 
                     # updateModel(currdate, region)
-
-                    sort_sum_happs(region)
                     print("success")
+
             currdate += datetime.timedelta(days=1)
+        sort_sum_happs(region)
 
 
 @click.command()
