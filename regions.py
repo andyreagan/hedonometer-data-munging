@@ -179,7 +179,7 @@ def updateModel(start, region):
     t.save()
 
 
-def preshift(start, region, word_list, score_list):
+def preshift(start, region, word_list, score_list, preshift_words=10):
     sumfile = os.path.join(
         DATA_DIR,
         region.directory, region.wordVecDir,
@@ -217,10 +217,10 @@ def preshift(start, region, word_list, score_list):
     happs = emotionV(word_array_stopped, score_list)
     if sum(previous_word_array_stopped) == 0:
         prevhapps = 0
-        sortedMag = 0
-        sortedWords = 0
-        sortedType = 0
-        sumTypes = [0, 0, 0, 0]
+        sortedMag = zeros(preshift_words)
+        sortedWords = zeros(preshift_words)
+        sortedType = zeros(preshift_words)
+        sumTypes = zeros(4)
     else:
         prevhapps = emotionV(previous_word_array_stopped, score_list)
         [sortedMag, sortedWords, sortedType, sumTypes] = shift(
@@ -228,7 +228,7 @@ def preshift(start, region, word_list, score_list):
 
     g = codecs.open(shiftfile, 'w', 'utf8')
     g.write("mag,word,type")
-    for i in xrange(10):
+    for i in xrange(preshift_words):
         g.write("\n")
         g.write(str(sortedMag[i]))
         g.write(",")
