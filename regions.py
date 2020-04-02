@@ -220,7 +220,7 @@ def preshift(start, region, word_list, score_list, preshift_words=10):
     if sum(previous_word_array_stopped) == 0:
         prevhapps = 0
         sortedMag = zeros(preshift_words)
-        sortedWords = zeros(preshift_words)
+        sortedWords = array(["" for i in range(preshift_words)[])
         sortedType = zeros(preshift_words)
         sumTypes = zeros(4)
     else:
