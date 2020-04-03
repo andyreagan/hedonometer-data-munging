@@ -131,7 +131,7 @@ def timeseries(daywordarray, date, region, word_list, score_list, useStopWindow=
             g.write("{0},{1}\n".format(date.strftime("%Y-%m-%d"), happs))
 
         Happs.objects.filter(timeseries=region, date=date).delete()
-        Happs(timeseries=region, date=date, value=happs, frequency=sum(daywordarray))
+        Happs(timeseries=region, date=date, value=happs, frequency=sum(daywordarray)).save()
 
     # always write out the frequency
     with open(sumfreq, "a") as h:
