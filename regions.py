@@ -26,10 +26,12 @@ from os import mkdir
 from os.path import isdir, isfile
 
 import click
+import django
 from hedonometer.models import Timeseries
 from labMTsimple.storyLab import emotionV, shift, stopper
 from numpy import array, float, sum, zeros
 
+django.setup()
 DATA_DIR = "/usr/share/nginx/data"
 with open(os.path.join(DATA_DIR, Timeseries.objects.all()[0].directory, "stopwords.csv"), "r") as f:
     IGNORE = f.read().split("\n")
