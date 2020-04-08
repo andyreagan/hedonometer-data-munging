@@ -28,7 +28,7 @@ from os.path import isdir, isfile
 
 import click
 import django
-from numpy import arange, array, dot, float, sum, vectorize, zeros
+from numpy import arange, array, dot, float, vectorize, zeros
 
 django.setup()
 from hedonometer.models import Timeseries, Happs  # noqa:E402 isort:skip
@@ -226,7 +226,7 @@ def preshift(
         DATA_DIR, region.directory, region.shiftDir, start.strftime("%Y-%m-%d-metashift.csv")
     )
 
-    if sum(previous_word_array_stopped) == 0:
+    if previous_word_array_stopped.sum() == 0:
         prevhapps = 0
         sortedMag = zeros(preshift_words)
         sortedWords = array(["" for i in range(preshift_words)])
