@@ -173,7 +173,10 @@ def preshift(
     else:
         prevhapps = emotionV(previous_word_array_stopped, score_list)
         [sortedMag, sortedWords, sortedType, sumTypes] = shift(
-            previous_word_array_stopped, word_array_stopped, score_list, word_list
+            refFreq=previous_word_array_stopped,
+            compFreq=word_array_stopped,
+            lens=score_list,
+            words=word_list,
         )
 
     with open(shiftfile, "w") as g:
@@ -273,11 +276,13 @@ def switch_delimiter(from_delim: str, to_delim: str, filename: str) -> array:
 def loopdates(startdate, enddate):
     for region in Timeseries.objects.all():
         currdate = copy.copy(startdate)
+        logging.info(os.path.join(DATA_DIR, region.directory, region.scoreList))
         with open(os.path.join(DATA_DIR, region.directory, region.scoreList), "r") as f:
             labMTvector = list(map(float, f.read().strip().split("\n")))
         logging.info(str(len(labMTvector)))
         logging.info(labMTvector[:5])
         logging.info(labMTvector[-5:])
+        logging.info(os.path.join(DATA_DIR, region.directory, region.wordList))
         with open(os.path.join(DATA_DIR, region.directory, region.wordList), "r") as f:
             labMTwordList = f.read().strip().split("\n")
         logging.info(str(len(labMTwordList)))
@@ -287,8 +292,10 @@ def loopdates(startdate, enddate):
         assert len(labMTvector) == len(labMTwordList)
         numw = len(labMTvector)
 
+        logging.info(os.path.join(DATA_DIR, region.directory, region.stopWordList))
         with open(os.path.join(DATA_DIR, region.directory, region.stopWordList), "r") as f:
             ignore = f.read().split("\n")
+        logging.info(ignore)
 
         while currdate <= enddate:
             logging.info(
