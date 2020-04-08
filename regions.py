@@ -28,14 +28,72 @@ from os.path import isdir, isfile
 
 import click
 import django
-from labMTsimple.storyLab import emotionV, shift, stopper
-from numpy import array, float, sum, zeros
+from numpy import array, dot, float, sum, zeros
 
 django.setup()
 from hedonometer.models import Timeseries, Happs  # noqa:E402 isort:skip
 
 DATA_DIR = "/usr/share/nginx/data"
 logging.basicConfig(level=logging.INFO)
+
+
+def stopper(tmpVec, score_list, word_list, stopVal=1.0, ignore=[], center=5.0):
+    """Take a frequency vector, and 0 out the stop words.
+
+    Will always remove the nig* words.
+
+    Return the 0'ed vector."""
+
+    ignoreWords = ["nigga", "nigger", "niggaz", "niggas"]
+    for word in ignore:
+        ignoreWords.append(word)
+    newVec = copy.copy(tmpVec)
+    for i in range(len(score_list)):
+        if abs(score_list[i] - center) < stopVal:
+            newVec[i] = 0
+        if word_list[i] in ignoreWords:
+            newVec[i] = 0
+
+    return newVec
+
+
+def shift(refFreq, compFreq, lens, words, sort=True):
+    """Compute a shift, and return the results.
+
+    If sort=True, will return the three sorted lists, and sumTypes. Else, just the two shift lists, and sumTypes (words don't need to be sorted)."""
+
+    # normalize frequencies
+    Nref = float(sum(refFreq))
+    Ncomp = float(sum(compFreq))
+    for i in range(len(lens)):
+        refFreq[i] = float(refFreq[i]) / Nref
+        compFreq[i] = float(compFreq[i]) / Ncomp
+
+    # compute the reference happiness
+    refH = sum([refFreq[i] * lens[i] for i in range(len(lens))])
+    # determine shift magnitude, type
+    shiftMag = [0 for i in range(len(lens))]
+    shiftType = [0 for i in range(len(lens))]
+    for i in range(len(lens)):
+        freqDiff = compFreq[i] - refFreq[i]
+        shiftMag[i] = (lens[i] - refH) * freqDiff
+        if freqDiff > 0:
+            shiftType[i] += 2
+        if lens[i] > refH:
+            shiftType[i] += 1
+
+    sumTypes = [0.0 for i in range(4)]
+    for i in range(len(lens)):
+        sumTypes[shiftType[i]] += shiftMag[i]
+
+    if sort:
+        indices = sorted(range(len(shiftMag)), key=lambda k: abs(shiftMag[k]), reverse=True)
+        sortedMag = [shiftMag[i] for i in indices]
+        sortedType = [shiftType[i] for i in indices]
+        sortedWords = [words[i] for i in indices]
+        return sortedMag, sortedWords, sortedType, sumTypes
+    else:
+        return shiftMag, shiftType, sumTypes
 
 
 def rsync_main(region, date):
@@ -104,22 +162,15 @@ def make_prev7_vector(start, region, numw):
     return total
 
 
-def timeseries(daywordarray, date, region, word_list, score_list, useStopWindow=True, ignore=[]):
+def timeseries(daywordarray, date, region, score_list):
     sumhapps = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumhapps.csv")
     sumfreq = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumfreq.csv")
     happsfile = os.path.join(
         DATA_DIR, region.directory, region.wordVecDir, date.strftime("%Y-%m-%d-happs.csv")
     )
 
-    # compute happiness of the word vectors
-    if useStopWindow:
-        stoppedVec = stopper(
-            tmpVec=daywordarray, score_list=score_list, word_list=word_list, ignore=ignore
-        )
-    else:
-        stoppedVec = daywordarray
-
-    happs = emotionV(stoppedVec, score_list)
+    freq = daywordarray.sum()
+    happs = dot(daywordarray, score_list) / freq
 
     if happs > 0:
         # write out the day happs
@@ -131,13 +182,13 @@ def timeseries(daywordarray, date, region, word_list, score_list, useStopWindow=
             g.write("{0},{1}\n".format(date.strftime("%Y-%m-%d"), happs))
 
         Happs.objects.filter(timeseries=region, date=date).delete()
-        Happs(timeseries=region, date=date, value=happs, frequency=sum(daywordarray)).save()
+        Happs(timeseries=region, date=date, value=happs, frequency=freq).save()
 
     # always write out the frequency
     with open(sumfreq, "a") as h:
-        h.write("{0},{1:.0f}\n".format(date.strftime("%Y-%m-%d"), sum(daywordarray)))
+        h.write("{0},{1:.0f}\n".format(date.strftime("%Y-%m-%d"), freq))
 
-    return stoppedVec, happs, sum(daywordarray)
+    return happs, freq
 
 
 def updateModel(start, region):
@@ -171,7 +222,7 @@ def preshift(
         sortedType = zeros(preshift_words)
         sumTypes = zeros(4)
     else:
-        prevhapps = emotionV(previous_word_array_stopped, score_list)
+        prevhapps = dot(previous_word_array_stopped, score_list) / previous_word_array_stopped.sum()
         [sortedMag, sortedWords, sortedType, sumTypes] = shift(
             refFreq=previous_word_array_stopped,
             compFreq=word_array_stopped,
@@ -328,16 +379,14 @@ def loopdates(startdate, enddate):
                         word_list=labMTwordList,
                         ignore=ignore,
                     )
-
-                    day_vector_stopped, happs, freq = timeseries(
-                        day_vector,
-                        currdate,
-                        region,
-                        word_list=labMTwordList,
+                    day_vector_stopped = stopper(
+                        tmpVec=day_vector,
                         score_list=labMTvector,
-                        useStopWindow=True,
+                        word_list=labMTwordList,
                         ignore=ignore,
                     )
+
+                    happs, freq = timeseries(day_vector, currdate, region, score_list=labMTvector)
 
                     preshift(
                         day_vector_stopped,
