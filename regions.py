@@ -35,8 +35,7 @@ django.setup()
 from hedonometer.models import Timeseries, Happs  # noqa:E402 isort:skip
 
 DATA_DIR = "/usr/share/nginx/data"
-with open(os.path.join(DATA_DIR, Timeseries.objects.all()[0].directory, "stopwords.csv"), "r") as f:
-    IGNORE = f.read().split("\n")
+logging.basicConfig(level=logging.INFO)
 
 
 def rsync_main(region, date):
@@ -105,7 +104,7 @@ def make_prev7_vector(start, region, numw):
     return total
 
 
-def timeseries(daywordarray, date, region, word_list, score_list, useStopWindow=True):
+def timeseries(daywordarray, date, region, word_list, score_list, useStopWindow=True, ignore=[]):
     sumhapps = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumhapps.csv")
     sumfreq = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumfreq.csv")
     happsfile = os.path.join(
@@ -115,7 +114,7 @@ def timeseries(daywordarray, date, region, word_list, score_list, useStopWindow=
     # compute happiness of the word vectors
     if useStopWindow:
         stoppedVec = stopper(
-            tmpVec=daywordarray, score_list=score_list, word_list=word_list, ignore=IGNORE
+            tmpVec=daywordarray, score_list=score_list, word_list=word_list, ignore=ignore
         )
     else:
         stoppedVec = daywordarray
@@ -277,12 +276,19 @@ def loopdates(startdate, enddate):
         with open(os.path.join(DATA_DIR, region.directory, region.scoreList), "r") as f:
             labMTvector = list(map(float, f.read().strip().split("\n")))
         logging.info(str(len(labMTvector)))
+        logging.info(labMTvector[:5])
+        logging.info(labMTvector[-5:])
         with open(os.path.join(DATA_DIR, region.directory, region.wordList), "r") as f:
             labMTwordList = f.read().strip().split("\n")
         logging.info(str(len(labMTwordList)))
+        logging.info(labMTwordList[:5])
+        logging.info(labMTwordList[-5:])
 
         assert len(labMTvector) == len(labMTwordList)
         numw = len(labMTvector)
+
+        with open(os.path.join(DATA_DIR, region.directory, region.stopWordList), "r") as f:
+            ignore = f.read().split("\n")
 
         while currdate <= enddate:
             logging.info(
@@ -313,7 +319,7 @@ def loopdates(startdate, enddate):
                         tmpVec=prev7_vector,
                         score_list=labMTvector,
                         word_list=labMTwordList,
-                        ignore=IGNORE,
+                        ignore=ignore,
                     )
 
                     day_vector_stopped, happs, freq = timeseries(
@@ -323,6 +329,7 @@ def loopdates(startdate, enddate):
                         word_list=labMTwordList,
                         score_list=labMTvector,
                         useStopWindow=True,
+                        ignore=ignore,
                     )
 
                     preshift(
