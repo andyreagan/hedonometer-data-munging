@@ -173,7 +173,7 @@ def make_prev7_vector(start, region, numw):
     return total
 
 
-def timeseries(daywordarray, date, region, score_list):
+def timeseries(daywordarray: array, date, region, score_list: array):
     sumhapps = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumhapps.csv")
     sumfreq = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumfreq.csv")
     happsfile = os.path.join(
@@ -374,16 +374,16 @@ def loopdates(startdate, enddate):
             )
             if not isfile(sumfile):
                 logging.info("trying to pull file {0} for {1}".format(region.title, sumfile))
-                rsync_main(region, currdate)
+                rsync_main(region=region, date=currdate)
 
                 if isfile(sumfile):
                     logging.info("file was pulled, doing stuff")
 
                     # first time this file moved over here, check the format
-                    day_vector = switch_delimiter(",", "\n", sumfile)
+                    day_vector = switch_delimiter(from_delim=",", to_delim="\n", filename=sumfile)
 
                     # add up the previous vectors
-                    prev7_vector = make_prev7_vector(currdate, region, numw)
+                    prev7_vector = make_prev7_vector(start=currdate, region=region, numw=numw)
                     prev7_vector_stopped = stopper(
                         tmpVec=prev7_vector,
                         score_list=labMTvector,
@@ -397,14 +397,19 @@ def loopdates(startdate, enddate):
                         ignore=ignore,
                     )
 
-                    happs, freq = timeseries(day_vector, currdate, region, score_list=labMTvector)
+                    happs, freq = timeseries(
+                        daywordarray=day_vector_stopped,
+                        date=currdate,
+                        region=region,
+                        score_list=labMTvector,
+                    )
 
                     preshift(
-                        day_vector_stopped,
-                        happs,
-                        prev7_vector_stopped,
-                        currdate,
-                        region,
+                        word_array_stopped=day_vector_stopped,
+                        happs=happs,
+                        previous_word_array_stopped=prev7_vector_stopped,
+                        start=currdate,
+                        region=region,
                         word_list=labMTwordList,
                         score_list=labMTvector,
                     )
