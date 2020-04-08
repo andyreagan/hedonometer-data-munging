@@ -95,7 +95,7 @@ def shift(refFreq: array, compFreq: array, lens: array, words: array, sort=True)
     # poor man's group_by and sum()
     sumTypes = [0.0 for i in range(4)]
     for i in range(len(lens)):
-        sumTypes[shiftType[i]] += shiftMag[i]
+        sumTypes[int(shiftType[i])] += shiftMag[i]
 
     if sort:
         indices = sorted(range(len(lens)), key=lambda k: abs(shiftMag[k]), reverse=True)
