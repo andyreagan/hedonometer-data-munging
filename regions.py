@@ -28,7 +28,7 @@ from os.path import isdir, isfile
 
 import click
 import django
-from numpy import array, dot, float, sum, zeros
+from numpy import arange, array, dot, float, sum, vectorize, zeros
 
 django.setup()
 from hedonometer.models import Timeseries, Happs  # noqa:E402 isort:skip
@@ -37,60 +37,71 @@ DATA_DIR = "/usr/share/nginx/data"
 logging.basicConfig(level=logging.INFO)
 
 
-def stopper(tmpVec, score_list, word_list, stopVal=1.0, ignore=[], center=5.0):
+def stopper(
+    tmpVec: array,
+    score_list: array,
+    word_list: array,
+    stopVal: float = 1.0,
+    ignore: list = [],
+    center: float = 5.0,
+):
     """Take a frequency vector, and 0 out the stop words.
 
     Will always remove the nig* words.
 
     Return the 0'ed vector."""
 
-    ignoreWords = ["nigga", "nigger", "niggaz", "niggas"]
-    for word in ignore:
-        ignoreWords.append(word)
+    ignoreWords = set(["nigga", "nigger", "niggaz", "niggas"] + ignore)
     newVec = copy.copy(tmpVec)
-    for i in range(len(score_list)):
-        if abs(score_list[i] - center) < stopVal:
-            newVec[i] = 0
-        if word_list[i] in ignoreWords:
-            newVec[i] = 0
+    newVec[abs(score_list - center) < stopVal] = 0
+
+    def ignoreWord(word: str, ignore_set: set):
+        return word in ignore_set
+
+    ignoreWordVfun = vectorize(ignoreWord)
+    newVec[ignoreWordVfun(word_list, ignoreWords)] = 0
 
     return newVec
 
 
-def shift(refFreq, compFreq, lens, words, sort=True):
+def test_stopper():
+    words = array(["a", "b", "c", "d"])
+    ignore = ["a"]
+    scores = array([-1.0, 5.0, 6.0, 7.0])
+    counts = arange(4) + 10
+    stopped = stopper(counts, scores, words, ignore=ignore)
+    for i, count in enumerate([0, 0, 12, 13]):
+        assert stopped[i] == count
+
+
+def shift(refFreq: array, compFreq: array, lens: array, words: array, sort=True):
     """Compute a shift, and return the results.
 
     If sort=True, will return the three sorted lists, and sumTypes. Else, just the two shift lists, and sumTypes (words don't need to be sorted)."""
 
     # normalize frequencies
-    Nref = float(sum(refFreq))
-    Ncomp = float(sum(compFreq))
-    for i in range(len(lens)):
-        refFreq[i] = float(refFreq[i]) / Nref
-        compFreq[i] = float(compFreq[i]) / Ncomp
+    refFreq = refFreq / refFreq.sum()
+    compFreq = compFreq / compFreq.sum()
 
     # compute the reference happiness
-    refH = sum([refFreq[i] * lens[i] for i in range(len(lens))])
+    refH = dot(refFreq, lens)
     # determine shift magnitude, type
-    shiftMag = [0 for i in range(len(lens))]
-    shiftType = [0 for i in range(len(lens))]
-    for i in range(len(lens)):
-        freqDiff = compFreq[i] - refFreq[i]
-        shiftMag[i] = (lens[i] - refH) * freqDiff
-        if freqDiff > 0:
-            shiftType[i] += 2
-        if lens[i] > refH:
-            shiftType[i] += 1
+    freqDiff = compFreq - refFreq
+    shiftMag = (lens - refH) * freqDiff
+    shiftType = zeros(len(lens))
+    shiftType[freqDiff > 0] = shiftType[freqDiff > 0] + 2
+    shiftType[lens > refH] = shiftType[lens > refH] + 1
 
+    # poor man's group_by and sum()
     sumTypes = [0.0 for i in range(4)]
     for i in range(len(lens)):
         sumTypes[shiftType[i]] += shiftMag[i]
 
     if sort:
-        indices = sorted(range(len(shiftMag)), key=lambda k: abs(shiftMag[k]), reverse=True)
-        sortedMag = [shiftMag[i] for i in indices]
-        sortedType = [shiftType[i] for i in indices]
-        sortedWords = [words[i] for i in indices]
+        indices = sorted(range(len(lens)), key=lambda k: abs(shiftMag[k]), reverse=True)
+        sortedMag = shiftMag[indices]
+        sortedType = shiftType[indices]
+        sortedWords = words[indices]
         return sortedMag, sortedWords, sortedType, sumTypes
     else:
         return shiftMag, shiftType, sumTypes
@@ -329,13 +340,13 @@ def loopdates(startdate, enddate):
         currdate = copy.copy(startdate)
         logging.info(os.path.join(DATA_DIR, region.directory, region.scoreList))
         with open(os.path.join(DATA_DIR, region.directory, region.scoreList), "r") as f:
-            labMTvector = list(map(float, f.read().strip().split("\n")))
+            labMTvector = array(list(map(float, f.read().strip().split("\n"))))
         logging.info(str(len(labMTvector)))
         logging.info(labMTvector[:5])
         logging.info(labMTvector[-5:])
         logging.info(os.path.join(DATA_DIR, region.directory, region.wordList))
         with open(os.path.join(DATA_DIR, region.directory, region.wordList), "r") as f:
-            labMTwordList = f.read().strip().split("\n")
+            labMTwordList = array(f.read().strip().split("\n"))
         logging.info(str(len(labMTwordList)))
         logging.info(labMTwordList[:5])
         logging.info(labMTwordList[-5:])
