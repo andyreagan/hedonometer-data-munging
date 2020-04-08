@@ -20,6 +20,7 @@
 
 import copy
 import datetime
+import logging
 import os
 import subprocess
 from os import mkdir
@@ -40,15 +41,15 @@ with open(os.path.join(DATA_DIR, Timeseries.objects.all()[0].directory, "stopwor
 
 def rsync_main(region, date):
     wordvec_dir = os.path.join(DATA_DIR, region.directory, region.wordVecDir)
-    print(wordvec_dir)
+    logging.info(wordvec_dir)
     if not isdir(wordvec_dir):
-        print("creating", wordvec_dir)
+        logging.info("creating " + wordvec_dir)
         mkdir(wordvec_dir)
     command = "rsync -avzr vacc2:{source_file} {dest_file}".format(
         source_file=os.path.join(region.sourceDir, date.strftime("%Y-%m-%d.txt")),
         dest_file=os.path.join(wordvec_dir, date.strftime("%Y-%m-%d-sum.csv")),
     )
-    print(command)
+    logging.info(command)
     subprocess.call(command, shell=True)
 
 
@@ -69,8 +70,8 @@ def sumfiles(start, end, wordvec, title):
             with open(sumfile, "r") as f:
                 a = array(list(map(float, f.read().strip().split())))
             if len(a) != len(wordvec):
-                print(len(a))
-                print(len(wordvec))
+                logging.info(str(len(a)))
+                logging.info(str(len(wordvec)))
             assert len(a) == len(wordvec)
             wordvec = wordvec + a
             files[curr] = a
@@ -273,21 +274,22 @@ def switch_delimiter(from_delim: str, to_delim: str, filename: str) -> array:
 def loopdates(startdate, enddate):
     for region in Timeseries.objects.all():
         currdate = copy.copy(startdate)
+        with open(os.path.join(DATA_DIR, region.directory, region.scoreList), "r") as f:
+            labMTvector = list(map(float, f.read().strip().split("\n")))
+        logging.info(str(len(labMTvector)))
+        with open(os.path.join(DATA_DIR, region.directory, region.wordList), "r") as f:
+            labMTwordList = f.read().strip().split("\n")
+        logging.info(str(len(labMTwordList)))
+
+        assert len(labMTvector) == len(labMTwordList)
+        numw = len(labMTvector)
+
         while currdate <= enddate:
-            print(
+            logging.info(
                 "processing region {0} on {1}".format(
                     region.title, datetime.datetime.strftime(currdate, "%Y-%m-%d")
                 )
             )
-            with open(os.path.join(DATA_DIR, region.directory, region.scoreList), "r") as f:
-                labMTvector = list(map(float, f.read().strip().split("\n")))
-            print(len(labMTvector))
-            with open(os.path.join(DATA_DIR, region.directory, region.wordList), "r") as f:
-                labMTwordList = f.read().strip().split("\n")
-            print(len(labMTwordList))
-
-            assert len(labMTvector) == len(labMTwordList)
-            numw = len(labMTvector)
 
             sumfile = os.path.join(
                 DATA_DIR,
@@ -296,11 +298,11 @@ def loopdates(startdate, enddate):
                 datetime.datetime.strftime(currdate, "%Y-%m-%d-sum.csv"),
             )
             if not isfile(sumfile):
-                print("trying to pull file {0} for {1}".format(region.title, sumfile))
+                logging.info("trying to pull file {0} for {1}".format(region.title, sumfile))
                 rsync_main(region, currdate)
 
                 if isfile(sumfile):
-                    print("file was pulled, doing stuff")
+                    logging.info("file was pulled, doing stuff")
 
                     # first time this file moved over here, check the format
                     day_vector = switch_delimiter(",", "\n", sumfile)
@@ -334,7 +336,7 @@ def loopdates(startdate, enddate):
                     )
 
                     # updateModel(currdate, region)
-                    print("success")
+                    logging.info("success")
 
             currdate += datetime.timedelta(days=1)
         sort_sum_happs(region)
