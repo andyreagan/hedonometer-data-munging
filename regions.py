@@ -263,15 +263,13 @@ def switch_delimiter(from_delim: str, to_delim: str, filename: str) -> array:
 def loopdates(startdate, enddate):
     for region in Timeseries.objects.all():
         currdate = copy.copy(startdate)
-        logging.info(os.path.join(DATA_DIR, region.directory, region.scoreList))
-        with open(os.path.join(DATA_DIR, region.directory, region.scoreList), "r") as f:
-            labMTvector = array(list(map(float, f.read().strip().split("\n"))))
+
+        labMTvector = array(region.scores())
         logging.info(str(len(labMTvector)))
         logging.info(labMTvector[:5])
         logging.info(labMTvector[-5:])
-        logging.info(os.path.join(DATA_DIR, region.directory, region.wordList))
-        with open(os.path.join(DATA_DIR, region.directory, region.wordList), "r") as f:
-            labMTwordList = array(f.read().strip().split("\n"))
+
+        labMTwordList = array(region.words())
         logging.info(str(len(labMTwordList)))
         logging.info(labMTwordList[:5])
         logging.info(labMTwordList[-5:])
@@ -279,9 +277,7 @@ def loopdates(startdate, enddate):
         assert len(labMTvector) == len(labMTwordList)
         numw = len(labMTvector)
 
-        logging.info(os.path.join(DATA_DIR, region.directory, region.stopWordList))
-        with open(os.path.join(DATA_DIR, region.directory, region.stopWordList), "r") as f:
-            ignore = f.read().split("\n")
+        ignore = region.stopwords()
         logging.info(ignore)
 
         while currdate <= enddate:
