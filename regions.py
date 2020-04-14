@@ -174,30 +174,12 @@ def make_prev7_vector(start, region, numw):
 
 
 def timeseries(daywordarray: array, date, region, score_list: array):
-    sumhapps = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumhapps.csv")
-    sumfreq = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumfreq.csv")
-    happsfile = os.path.join(
-        DATA_DIR, region.directory, region.wordVecDir, date.strftime("%Y-%m-%d-happs.csv")
-    )
-
     freq = daywordarray.sum()
     happs = dot(daywordarray, score_list) / freq
 
     if happs > 0:
-        # write out the day happs
-        with open(happsfile, "w") as f:
-            f.write("{0}".format(happs))
-
-        # add to main file
-        with open(sumhapps, "a") as g:
-            g.write("{0},{1}\n".format(date.strftime("%Y-%m-%d"), happs))
-
         Happs.objects.filter(timeseries=region, date=date).delete()
         Happs(timeseries=region, date=date, value=happs, frequency=freq).save()
-
-    # always write out the frequency
-    with open(sumfreq, "a") as h:
-        h.write("{0},{1:.0f}\n".format(date.strftime("%Y-%m-%d"), freq))
 
     return happs, freq
 
@@ -259,63 +241,6 @@ def preshift(
             )
         )
     return prevhapps, sortedMag, sortedWords, sortedType, sumTypes
-
-
-def sort_sum_happs(region):
-    sumhapps = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumhapps.csv")
-    sumfreq = os.path.join(DATA_DIR, region.directory, region.wordVecDir, "sumfreq.csv")
-    f = open(sumhapps, "r")
-    # skip the header
-    f.readline()
-    dates = []
-    happss = []
-    for line in f:
-        d, h = line.rstrip().split(",")
-        date = datetime.datetime.strptime(d, "%Y-%m-%d")
-        happs = float(h)
-        # make sure no duplicates
-        if date not in dates:
-            dates.append(date)
-            happss.append(happs)
-        # later dates take precendence
-        else:
-            happss[dates.index(date)] = happs
-    f.close()
-    # now sort
-    indexer = sorted(list(range(len(dates))), key=lambda k: dates[k])
-    dates_sorted = [dates[i] for i in indexer]
-    happss_sorted = [happss[i] for i in indexer]
-    f = open(sumhapps, "w")
-    f.write("date,value\n")
-    for d, h in zip(dates_sorted, happss_sorted):
-        f.write("{0},{1}\n".format(d.strftime("%Y-%m-%d"), h))
-    f.close()
-
-    f = open(sumfreq, "r")
-    # skip the header
-    f.readline()
-    dates = []
-    freqs = []
-    for line in f:
-        tmp = line.rstrip().split(",")
-        if len(tmp) == 2:
-            d, fr = tmp
-            date = datetime.datetime.strptime(d, "%Y-%m-%d")
-            freq = float(fr)
-            # make sure no duplicates
-            if date not in dates:
-                dates.append(date)
-                freqs.append(freq)
-    f.close()
-    # now sort
-    indexer = sorted(list(range(len(dates))), key=lambda k: dates[k])
-    dates_sorted = [dates[i] for i in indexer]
-    freqs_sorted = [freqs[i] for i in indexer]
-    f = open(sumfreq, "w")
-    f.write("date,value\n")
-    for d, fr in zip(dates_sorted, freqs_sorted):
-        f.write("{0},{1:.0f}\n".format(d.strftime("%Y-%m-%d"), fr))
-    f.close()
 
 
 def switch_delimiter(from_delim: str, to_delim: str, filename: str) -> array:
@@ -418,7 +343,6 @@ def loopdates(startdate, enddate):
                     logging.info("success")
 
             currdate += datetime.timedelta(days=1)
-        sort_sum_happs(region)
 
 
 @click.command()
