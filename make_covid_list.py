@@ -45,8 +45,9 @@ translations = {"spanish": {}}
 for word, score in covid_words["english"].items():
     if word in spanish_translation:
         for spanish_word in spanish_translation[word]:
-            covid_words["spanish"][spanish_word] = score
-            translations["spanish"][spanish_word] = word
+            if len(spanish_word.split(' ')) == 1:
+                covid_words["spanish"][spanish_word] = score
+                translations["spanish"][spanish_word] = word
 
 
 for lang in {"english", "spanish"}:
