@@ -173,13 +173,19 @@ def make_prev7_vector(start, region, numw):
     return total
 
 
-def timeseries(daywordarray: array, date, region, score_list: array):
+def timeseries(
+    daywordarray: array,
+    date: datetime.date,
+    region: Timeseries,
+    score_list: array,
+    total_count: int,
+) -> (float, int):
     freq = daywordarray.sum()
     happs = dot(daywordarray, score_list) / freq
 
     if happs > 0:
         Happs.objects.filter(timeseries=region, date=date).delete()
-        Happs(timeseries=region, date=date, value=happs, frequency=freq).save()
+        Happs(timeseries=region, date=date, value=happs, frequency=total_count).save()
 
     return happs, freq
 
@@ -260,7 +266,7 @@ def switch_delimiter(from_delim: str, to_delim: str, filename: str) -> array:
         return array(list(map(lambda x: int(float(x)), raw.rstrip(to_delim).split(to_delim))))
 
 
-def loopdates(startdate, enddate):
+def loopdates(startdate: datetime.date, enddate: datetime.date):
     for region in Timeseries.objects.all():
         currdate = copy.copy(startdate)
 
@@ -293,7 +299,9 @@ def loopdates(startdate, enddate):
                 region.wordVecDir,
                 datetime.datetime.strftime(currdate, "%Y-%m-%d-sum.csv"),
             )
-            if not isfile(sumfile):
+            try:
+                Happs.objects.get(timeseries=region, date=currdate)
+            except Happs.DoesNotExist:
                 logging.info("trying to pull file {0} for {1}".format(region.title, sumfile))
                 rsync_main(region=region, date=currdate)
 
@@ -323,6 +331,7 @@ def loopdates(startdate, enddate):
                         date=currdate,
                         region=region,
                         score_list=labMTvector,
+                        total_count=day_vector.sum(),
                     )
 
                     preshift(
@@ -342,18 +351,15 @@ def loopdates(startdate, enddate):
 
 
 @click.command()
-@click.option("--days-back", default=None)
-@click.option("--start-date", default=None)
-def main(days_back, start_date):
-    end = datetime.datetime.now()
-    end -= datetime.timedelta(
-        hours=end.hour, minutes=end.minute, seconds=end.second, microseconds=end.microsecond
-    )
+@click.option("--days-back", default="")
+@click.option("--start-date", default="")
+def main(days_back: str, start_date: str):
+    end = datetime.datetime.now().date()
 
-    if start_date is None and days_back is None:
+    if (start_date == "") and (days_back == ""):
         raise ("Need at least some date to start from")
-    if start_date is not None:
-        start = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+    if start_date != "":
+        start = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
     else:
         start = end - datetime.timedelta(days=int(days_back))
 
