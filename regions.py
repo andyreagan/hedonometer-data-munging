@@ -31,7 +31,7 @@ import django
 from numpy import arange, array, dot, float, vectorize, zeros
 
 django.setup()
-from hedonometer.models import Timeseries, Happs  # noqa:E402 isort:skip
+from hedonometer.models import Timeseries, Happs, DoesNotExist  # noqa:E402 isort:skip
 
 DATA_DIR = "/usr/share/nginx/data"
 logging.basicConfig(level=logging.INFO)
@@ -186,7 +186,7 @@ def add_timeseries_happs(
     if happs > 0:
         try:
             h = Happs.objects.get(timeseries=timeseries, date=date)
-        except Happs.DoesNotExist:
+        except DoesNotExist:
             Happs(timeseries=timeseries, date=date, value=happs, frequency=total_count).save()
         else:
             h.value = happs
@@ -298,7 +298,7 @@ def process_day(
     happs, freq = add_timeseries_happs(
         daywordarray=day_vector_stopped,
         date=currdate,
-        region=timeseries,
+        timeseries=timeseries,
         score_list=labMTvector,
         total_count=day_vector.sum(),
     )
@@ -357,7 +357,7 @@ def loopdates(
             # reprocess even if it does exist (and reprocess is true)
             if reprocess and isfile(sumfile):
                 process_day(sumfile, timeseries, currdate, numw, labMTvector, labMTwordList, ignore)
-        except Happs.DoesNotExist:
+        except DoesNotExist:
             logging.info("trying to pull file {0} for {1}".format(timeseries.title, sumfile))
             rsync_main(region=timeseries, date=currdate)
 
