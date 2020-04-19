@@ -36,11 +36,18 @@ for lang, translation in all_translation.items():
     covid_words[lang] = dict()
     translations[lang] = dict()
     for word, scores in covid_words["english"].items():
+        # if we have a translation, use it
         if word in translation:
+            # we can have multiple (this is a list)
+            # so loop over it
             for lang_word in translation[word]:
                 if len(lang_word.split(" ")) == 1:
                     covid_words[lang][lang_word.lower()] = scores
                     translations[lang][lang_word.lower()] = word
+        # keep the words even if they don't have translations
+        else:
+            covid_words[lang][word] = scores
+            translations[lang][word] = word
 
 for lang, lang_covid_words in covid_words.items():
     lang_translations = translations[lang]
