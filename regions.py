@@ -173,10 +173,10 @@ def make_prev7_vector(start, region, numw):
     return total
 
 
-def timeseries(
+def add_timeseries_happs(
     daywordarray: array,
     date: datetime.date,
-    region: Timeseries,
+    timeseries: Timeseries,
     score_list: array,
     total_count: int,
 ) -> (float, int):
@@ -184,8 +184,16 @@ def timeseries(
     happs = dot(daywordarray, score_list) / freq
 
     if happs > 0:
-        Happs.objects.filter(timeseries=region, date=date).delete()
-        Happs(timeseries=region, date=date, value=happs, frequency=total_count).save()
+        try:
+            h = Happs.objects.get(timeseries=timeseries, date=date)
+        except Happs.DoesNotExist:
+            Happs(timeseries=timeseries, date=date, value=happs, frequency=total_count).save()
+        else:
+            h.value = happs
+            h.frequency = total_count
+            h.save()
+        # finally:
+        #     h.save()
 
     return happs, freq
 
@@ -266,94 +274,106 @@ def switch_delimiter(from_delim: str, to_delim: str, filename: str) -> array:
         return array(list(map(lambda x: int(float(x)), raw.rstrip(to_delim).split(to_delim))))
 
 
-def loopdates(startdate: datetime.date, enddate: datetime.date):
-    for region in Timeseries.objects.all():
-        currdate = copy.copy(startdate)
+def process_day(
+    sumfile: str,
+    timeseries: Timeseries,
+    currdate: datetime.date,
+    numw: int,
+    labMTvector: array,
+    labMTwordList: array,
+    ignore: list,
+):
+    # first time this file moved over here, check the format
+    day_vector = switch_delimiter(from_delim=",", to_delim="\n", filename=sumfile)
 
-        labMTvector = array(region.scores())
-        logging.info(str(len(labMTvector)))
-        logging.info(labMTvector[:5])
-        logging.info(labMTvector[-5:])
+    # add up the previous vectors
+    prev7_vector = make_prev7_vector(start=currdate, region=timeseries, numw=numw)
+    prev7_vector_stopped = stopper(
+        tmpVec=prev7_vector, score_list=labMTvector, word_list=labMTwordList, ignore=ignore,
+    )
+    day_vector_stopped = stopper(
+        tmpVec=day_vector, score_list=labMTvector, word_list=labMTwordList, ignore=ignore,
+    )
 
-        labMTwordList = array(region.words())
-        logging.info(str(len(labMTwordList)))
-        logging.info(labMTwordList[:5])
-        logging.info(labMTwordList[-5:])
+    happs, freq = add_timeseries_happs(
+        daywordarray=day_vector_stopped,
+        date=currdate,
+        region=timeseries,
+        score_list=labMTvector,
+        total_count=day_vector.sum(),
+    )
 
-        assert len(labMTvector) == len(labMTwordList)
-        numw = len(labMTvector)
+    preshift(
+        word_array_stopped=day_vector_stopped,
+        happs=happs,
+        previous_word_array_stopped=prev7_vector_stopped,
+        start=currdate,
+        region=timeseries,
+        word_list=labMTwordList,
+        score_list=labMTvector,
+    )
 
-        ignore = region.stopwords()
-        logging.info(ignore)
+    logging.info("success")
 
-        while currdate <= enddate:
-            logging.info(
-                "processing region {0} on {1}".format(
-                    region.title, datetime.datetime.strftime(currdate, "%Y-%m-%d")
-                )
+
+def loopdates(
+    timeseries: Timeseries, startdate: datetime.date, enddate: datetime.date, reprocess: bool
+):
+    currdate = copy.copy(startdate)
+
+    labMTvector = array(timeseries.scores())
+    logging.info(str(len(labMTvector)))
+    logging.info(labMTvector[:5])
+    logging.info(labMTvector[-5:])
+
+    labMTwordList = array(timeseries.words())
+    logging.info(str(len(labMTwordList)))
+    logging.info(labMTwordList[:5])
+    logging.info(labMTwordList[-5:])
+
+    assert len(labMTvector) == len(labMTwordList)
+    numw = len(labMTvector)
+
+    ignore = timeseries.stopwords()
+    logging.info(ignore)
+
+    while currdate <= enddate:
+        logging.info(
+            "processing timeseries {0} on {1}".format(
+                timeseries.title, datetime.datetime.strftime(currdate, "%Y-%m-%d")
             )
+        )
 
-            sumfile = os.path.join(
-                DATA_DIR,
-                region.directory,
-                region.wordVecDir,
-                datetime.datetime.strftime(currdate, "%Y-%m-%d-sum.csv"),
-            )
-            try:
-                Happs.objects.get(timeseries=region, date=currdate)
-            except Happs.DoesNotExist:
-                logging.info("trying to pull file {0} for {1}".format(region.title, sumfile))
-                rsync_main(region=region, date=currdate)
+        sumfile = os.path.join(
+            DATA_DIR,
+            timeseries.directory,
+            timeseries.wordVecDir,
+            datetime.datetime.strftime(currdate, "%Y-%m-%d-sum.csv"),
+        )
+        try:
+            Happs.objects.get(timeseries=timeseries, date=currdate)
+            # the file should exist if the previous query did,
+            # but check that too
+            # reprocess even if it does exist (and reprocess is true)
+            if reprocess and isfile(sumfile):
+                process_day(sumfile, timeseries, currdate, numw, labMTvector, labMTwordList, ignore)
+        except Happs.DoesNotExist:
+            logging.info("trying to pull file {0} for {1}".format(timeseries.title, sumfile))
+            rsync_main(region=timeseries, date=currdate)
 
-                if isfile(sumfile):
-                    logging.info("file was pulled, doing stuff")
+            if isfile(sumfile):
+                logging.info("file was pulled, doing stuff")
+                process_day(sumfile, timeseries, currdate, numw, labMTvector, labMTwordList, ignore)
 
-                    # first time this file moved over here, check the format
-                    day_vector = switch_delimiter(from_delim=",", to_delim="\n", filename=sumfile)
-
-                    # add up the previous vectors
-                    prev7_vector = make_prev7_vector(start=currdate, region=region, numw=numw)
-                    prev7_vector_stopped = stopper(
-                        tmpVec=prev7_vector,
-                        score_list=labMTvector,
-                        word_list=labMTwordList,
-                        ignore=ignore,
-                    )
-                    day_vector_stopped = stopper(
-                        tmpVec=day_vector,
-                        score_list=labMTvector,
-                        word_list=labMTwordList,
-                        ignore=ignore,
-                    )
-
-                    happs, freq = timeseries(
-                        daywordarray=day_vector_stopped,
-                        date=currdate,
-                        region=region,
-                        score_list=labMTvector,
-                        total_count=day_vector.sum(),
-                    )
-
-                    preshift(
-                        word_array_stopped=day_vector_stopped,
-                        happs=happs,
-                        previous_word_array_stopped=prev7_vector_stopped,
-                        start=currdate,
-                        region=region,
-                        word_list=labMTwordList,
-                        score_list=labMTvector,
-                    )
-
-                    # updateModel(currdate, region)
-                    logging.info("success")
-
-            currdate += datetime.timedelta(days=1)
+        currdate += datetime.timedelta(days=1)
 
 
 @click.command()
 @click.option("--days-back", default="")
 @click.option("--start-date", default="")
-def main(days_back: str, start_date: str):
+@click.option("--timeseries-title", default="")
+@click.option("--reprocess", is_flag=True)
+def main(days_back: str, start_date: str, timeseries_title: str, reprocess: bool):
     end = datetime.datetime.now().date()
 
     if (start_date == "") and (days_back == ""):
@@ -363,7 +383,13 @@ def main(days_back: str, start_date: str):
     else:
         start = end - datetime.timedelta(days=int(days_back))
 
-    loopdates(start, end)
+    if timeseries_title != "":
+        timeseriess = Timeseries.objects.filter(title=timeseries_title)
+    else:
+        timeseriess = Timeseries.objects.all()
+
+    for timeseries in timeseriess:
+        loopdates(timeseries, start, end, reprocess)
 
 
 if __name__ == "__main__":
