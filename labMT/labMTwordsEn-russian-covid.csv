@@ -9930,6 +9930,7 @@ epidemic
 kits
 lockdown
 masks
+ncov19
 outbreak
 pandemic
 quarantine
@@ -19870,6 +19871,7 @@ ventilators
 #kits
 #lockdown
 #masks
+#ncov19
 #outbreak
 #pandemic
 #quarantine

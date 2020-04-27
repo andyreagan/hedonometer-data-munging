@@ -36,16 +36,19 @@ for lang, translation in all_translation.items():
     covid_words[lang] = dict()
     translations[lang] = dict()
     for word, scores in covid_words["english"].items():
+        has_word = False
         # if we have a translation, use it
         if word in translation:
             # we can have multiple (this is a list)
             # so loop over it
             for lang_word in translation[word]:
-                if len(lang_word.split(" ")) == 1:
+                # check that it's a one-gram
+                if (len(lang_word.split(" ")) == 1) and (not has_word):
                     covid_words[lang][lang_word.lower()] = scores
                     translations[lang][lang_word.lower()] = word
-        # keep the words even if they don't have translations
-        else:
+                    has_word = True
+        # keep the words even if they don't have translations into 1-grams
+        if not has_word:
             covid_words[lang][word] = scores
             translations[lang][word] = word
 
@@ -162,3 +165,58 @@ for lang, lang_covid_words in covid_words.items():
     #     print("wc labMT/labMTwordsEn-" + lang + "-v2-2020-03-28.csv")
     #     print("head labMT/labMTwordsEn-" + lang + "-v2-2020-03-28.csv")
     #     print("tail labMT/labMTwordsEn-" + lang + "-v2-2020-03-28.csv")
+
+
+shortcodes = {
+    "arabic": "ar",
+    "chinese": "zh",
+    "english": "en",
+    "french": "fr",
+    "german": "de",
+    "hindi": "hi",
+    "indonesian": "id",
+    "korean": "ko",
+    "pashto": "ps",
+    "portuguese": "pt",
+    "russian": "ru",
+    "spanish": "es",
+    "urdu": "ur",
+}
+shortcodes_reverse = {y: x for x, y in shortcodes.items()}
+
+
+def check_order_w_jminot():
+    # for lang in {ar,de,es,fr,id,ko,pt,ru}; do scp vacc2:"/users/j/m/jminot/scratch/labmt/storywrangler_v2/other_langs/storywrangler_${lang}_all/labmt_version/2008-09-09.txt" labMT/josh/$lang.txt; done
+    # langs = {'ar','ko','pt','ru'}
+    langs = {"ar", "de", "es", "fr", "id", "ko", "pt", "ru"}
+    for lang in langs:
+        print(lang)
+        print("labMT/josh/" + lang + ".txt")
+        print("labMT/labMTwords-" + shortcodes_reverse[lang] + "-covid.csv")
+        raw = Path("labMT/josh/" + lang + ".txt").read_text()
+        lines = raw.strip().split("\n")[1:]
+        words = list(map(lambda x: x.split(" ")[0], lines))
+        scores = list(map(lambda x: x.split(" ")[1], lines))
+        print(words[:5])
+        print(scores[:5])
+        andy_words = (
+            Path("labMT/labMTwords-" + shortcodes_reverse[lang] + "-covid.csv")
+            .read_text()
+            .strip()
+            .split("\n")
+        )
+        andy_scores = (
+            Path("labMT/labMTscores-" + shortcodes_reverse[lang] + "-covid.csv")
+            .read_text()
+            .strip()
+            .split("\n")
+        )
+        print(andy_words[:5])
+        print(andy_scores[:5])
+        for i, (josh, andy) in enumerate(zip(words, andy_words)):
+            if josh != andy:
+                print(i, josh, andy)
+            assert josh == andy
+
+
+check_order_w_jminot()
