@@ -180,21 +180,23 @@ def add_timeseries_happs(
     score_list: array,
     total_count: int,
 ) -> (float, int):
+    '''
+    Given the counts (daywordarray) and scores (score_list),
+    compute the word count, happiness, and save as a Happs object belonging
+    to given timeseries object, with given date.
+    '''
     freq = daywordarray.sum()
     happs = dot(daywordarray, score_list) / freq
 
-    if happs > 0:
-        try:
-            h = Happs.objects.get(timeseries=timeseries, date=date)
-        except Happs.DoesNotExist:
-            Happs(timeseries=timeseries, date=date, value=happs, frequency=total_count).save()
-        else:
-            h.value = happs
-            h.frequency = total_count
-            h.save()
-        # finally:
-        #     h.save()
-
+    try:
+        h = Happs.objects.get(timeseries=timeseries, date=date)
+    except Happs.DoesNotExist:
+        Happs(timeseries=timeseries, date=date, value=happs, frequency=total_count).save()
+    else:
+        h.value = happs
+        h.frequency = total_count
+        h.save()
+ 
     return happs, freq
 
 
@@ -358,12 +360,18 @@ def loopdates(
             if reprocess and isfile(sumfile):
                 process_day(sumfile, timeseries, currdate, numw, labMTvector, labMTwordList, ignore)
         except Happs.DoesNotExist:
-            logging.info("trying to pull file {0} for {1}".format(timeseries.title, sumfile))
-            rsync_main(region=timeseries, date=currdate)
+            logging.info("happs object not found, attempt to create it")
+            
+            # only attempt to pull the file if it doesn't exist
+            if not isfile(sumfile):
+                logging.info("file doesn't exist, trying to pull file {0} for {1}".format(timeseries.title, sumfile))
+                rsync_main(region=timeseries, date=currdate)
 
             if isfile(sumfile):
-                logging.info("file was pulled, doing stuff")
+                logging.info("file exists, doing stuff")
                 process_day(sumfile, timeseries, currdate, numw, labMTvector, labMTwordList, ignore)
+            else:
+                logging.info("file doesn't exist: was not pulled")
 
         currdate += datetime.timedelta(days=1)
 
