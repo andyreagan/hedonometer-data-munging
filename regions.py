@@ -113,7 +113,7 @@ def rsync_main(region, date):
     if not isdir(wordvec_dir):
         logging.info("creating " + wordvec_dir)
         mkdir(wordvec_dir)
-    command = "rsync -avzr vacc2:{source_file} {dest_file}".format(
+    command = "rsync -avzr vacc1:{source_file} {dest_file}".format(
         source_file=os.path.join(region.sourceDir, date.strftime("%Y-%m-%d.txt")),
         dest_file=os.path.join(wordvec_dir, date.strftime("%Y-%m-%d-sum.csv")),
     )
